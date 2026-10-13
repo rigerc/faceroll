@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Added optional ESM React, Vue 3 and native Web Component adapters.
+- Exposed dedicated package subpaths with TypeScript declarations and optional
+  React/Vue peer dependencies.
+- Added reduced-motion handling, stable SSR faces and animation cleanup to
+  framework components.
+- Added integration documentation and smoke tests for packaging and the native
+  custom element.
+
+
 ## 0.3.0 — Expanded faces and curated presets
 
 - Expanded the catalog from 11/6/5 to 27 bodies, 16 eyes and 15 mouths,

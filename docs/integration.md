@@ -1,5 +1,7 @@
 # Integration
 
+See [framework components](frameworks.md) for React, Vue and Web Components.
+
 ## System prompts (agent faces)
 
 ```ts
