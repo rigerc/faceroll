@@ -120,3 +120,84 @@ test("browser example imports the shipped ESM build", () => {
   assert.ok(html.includes("FACE_PRESETS"));
   assert.ok(html.includes("Face gallery"));
 });
+
+
+test("framework exports are optional, packaged and parse as ESM", () => {
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  for (const subpath of ["react", "vue", "web-component"]) {
+    const entry = pkg.exports["./" + subpath];
+    assert.ok(entry);
+    assert.ok(readFileSync(new URL(".." + entry.types.slice(1), import.meta.url), "utf8").length);
+    const path = fileURLToPath(new URL(".." + entry.import.slice(1), import.meta.url));
+    const syntax = spawnSync(process.execPath, ["--check", path], { encoding: "utf8" });
+    assert.equal(syntax.status, 0, syntax.stderr);
+  }
+  assert.equal(pkg.peerDependenciesMeta.react.optional, true);
+  assert.equal(pkg.peerDependenciesMeta.vue.optional, true);
+  assert.equal(pkg.dependencies, undefined);
+  const path = fileURLToPath(new URL("../integrations/shared.js", import.meta.url));
+  assert.equal(spawnSync(process.execPath, ["--check", path], { encoding: "utf8" }).status, 0);
+});
+
+test("Web Component handles SSR, presets, states, pause and character overrides", async () => {
+  const { defineFacerollElement } = await import("../integrations/web-component.js");
+  const { startFaceAnimation } = await import("../integrations/shared.js");
+  assert.equal(defineFacerollElement(), false);
+  const kitty = esm.createPresetCharacter("kitty");
+  const frames = [];
+  const stop = startFaceAnimation(kitty.animations.working, (text) => frames.push(text), true);
+  assert.deepEqual(frames, [kitty.animations.working.still]);
+  stop();
+
+  const original = {
+    HTMLElement: globalThis.HTMLElement,
+    customElements: globalThis.customElements,
+    document: globalThis.document,
+  };
+  const elements = new Map();
+  class FakeHTMLElement {
+    constructor() { this.attrs = new Map(); this.isConnected = false; }
+    attachShadow() { return { append() {} }; }
+    setAttribute(name, value) {
+      const oldValue = this.getAttribute(name);
+      this.attrs.set(name, String(value));
+      if (this.constructor.observedAttributes.includes(name)) {
+        this.attributeChangedCallback(name, oldValue, String(value));
+      }
+    }
+    getAttribute(name) { return this.attrs.get(name) ?? null; }
+    hasAttribute(name) { return this.attrs.has(name); }
+    toggleAttribute(name, value) {
+      if (value) this.setAttribute(name, "");
+      else { this.attrs.delete(name); this.attributeChangedCallback(name); }
+    }
+  }
+  try {
+    globalThis.HTMLElement = FakeHTMLElement;
+    globalThis.customElements = {
+      get: (name) => elements.get(name),
+      define: (name, ctor) => elements.set(name, ctor),
+    };
+    globalThis.document = { createElement: () => ({ textContent: "", setAttribute() {} }) };
+    assert.equal(defineFacerollElement(), true);
+    assert.equal(defineFacerollElement(), false);
+
+    const face = new (elements.get("faceroll-face"))();
+    face.setAttribute("preset", "kitty");
+    face.paused = true;
+    face.isConnected = true;
+    face.connectedCallback();
+    assert.equal(face._face.textContent, kitty.animations.idle.still);
+    face.state = "happy";
+    assert.equal(face._face.textContent, kitty.animations.happy.still);
+    const another = esm.createPresetCharacter("hacker", { name: "Byte" });
+    face.character = another;
+    assert.equal(face._face.textContent, another.animations.happy.still);
+    face.disconnectedCallback();
+  } finally {
+    for (const [key, value] of Object.entries(original)) {
+      if (value === undefined) delete globalThis[key];
+      else globalThis[key] = value;
+    }
+  }
+});

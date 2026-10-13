@@ -139,6 +139,54 @@ npx faceroll parts
 
 Lock parts with `--body`, `--eyes` and `--mouth`.
 
+## Framework components
+
+Optional ESM adapters are available for React 18+, Vue 3.3+, and native Web
+Components. Import only the framework you use: the core and CLI remain free
+of runtime dependencies.
+
+### React
+
+```tsx
+import { createPresetCharacter } from "faceroll";
+import { AgentFace } from "faceroll/react";
+
+const pixel = createPresetCharacter("kitty", { name: "Pixel" });
+<AgentFace character={pixel} state="working" />;
+```
+
+### Vue 3
+
+```vue
+<script setup lang="ts">
+import { createPresetCharacter } from "faceroll";
+import { AgentFace } from "faceroll/vue";
+const pixel = createPresetCharacter("kitty", { name: "Pixel" });
+</script>
+
+<template>
+  <AgentFace :character="pixel" state="working" />
+</template>
+```
+
+### Native Web Component
+
+```ts
+import { defineFacerollElement } from "faceroll/web-component";
+defineFacerollElement();
+```
+
+```html
+<faceroll-face preset="kitty" name="Pixel" state="working"></faceroll-face>
+```
+
+Pass a generated character via the element's `.character` property to override
+the preset. React and Vue take `character`, `state`, and `paused` props.
+All adapters show still frames during SSR, respect reduced motion and clean up
+timers. The native element registers only when requested.
+
+See [framework integration documentation](docs/frameworks.md).
+
 ## API
 
 ### Characters
