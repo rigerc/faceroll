@@ -15,6 +15,9 @@ export type {
 export { BODIES, EYES, MOUTHS, PART_KINDS, partPool } from "./parts";
 export type { BodyId, EyesId, MouthId, PartKind, Parts } from "./parts";
 
+export { FACE_PRESETS, getFacePreset, createPresetCharacter } from "./presets";
+export type { FacePreset, PresetId } from "./presets";
+
 export { STATES, STATE_NAMES, getState } from "./states";
 export type { StateName } from "./states";
 

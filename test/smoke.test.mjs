@@ -21,7 +21,7 @@ test("ESM and CommonJS entry points expose the same core API", () => {
   }
 });
 
-test("all 2970 combinations have nine complete animations with stable durations", () => {
+test("all 58320 state animations have stable durations", () => {
   let checked = 0;
   for (const body of esm.BODIES) for (const eyes of esm.EYES) for (const mouth of esm.MOUTHS) {
     const c = esm.createCharacter({ body: body.id, eyes: eyes.id, mouth: mouth.id });
@@ -36,7 +36,8 @@ test("all 2970 combinations have nine complete animations with stable durations"
       checked++;
     }
   }
-  assert.equal(checked, 2970);
+  assert.equal(checked, esm.BODIES.length * esm.EYES.length * esm.MOUTHS.length * esm.STATES.length);
+  assert.equal(checked, 58320);
 });
 
 test("locked editor, seeded rerolls, bounded undo, and mouth preference", () => {
@@ -89,8 +90,33 @@ test("CLI supports new node output and old command interface", () => {
   }
 });
 
+test("named presets are immutable and can be selected in the CLI", () => {
+  assert.equal(esm.FACE_PRESETS.length, 24);
+  assert.equal(esm.createPresetCharacter("kitty").animations.idle.still, "ฅ(≖ᆺ≖)ฅ");
+  for (const preset of esm.FACE_PRESETS) {
+    assert.ok(Object.isFrozen(preset));
+    assert.ok(Object.isFrozen(preset.parts));
+  }
+  const editor = esm.createFaceroll({ locks: { body: true } });
+  editor.applyPreset("kitty");
+  assert.equal(editor.getParts().body, "cat");
+  assert.equal(editor.isLocked("body"), true);
+  assert.ok(editor.undo());
+  const cli = fileURLToPath(new URL("../dist/cli.js", import.meta.url));
+  const listing = spawnSync(process.execPath, [cli, "presets"], { encoding: "utf8" });
+  assert.equal(listing.status, 0, listing.stderr);
+  assert.equal(listing.stdout.trimEnd().split("\n").length, 24);
+  const selected = spawnSync(process.execPath, [cli, "roll", "--preset", "kitty", "--format", "json"], { encoding: "utf8" });
+  assert.equal(selected.status, 0, selected.stderr);
+  assert.deepEqual(JSON.parse(selected.stdout).parts, { body: "cat", eyes: "cat", mouth: "cat" });
+  const invalid = spawnSync(process.execPath, [cli, "roll", "--preset", "unknown"], { encoding: "utf8" });
+  assert.equal(invalid.status, 2);
+});
+
 test("browser example imports the shipped ESM build", () => {
   const html = readFileSync(new URL("../examples/browser.html", import.meta.url), "utf8");
   assert.ok(html.includes('from "../dist/index.js"'));
   assert.ok(html.includes("prefers-reduced-motion"));
+  assert.ok(html.includes("FACE_PRESETS"));
+  assert.ok(html.includes("Face gallery"));
 });

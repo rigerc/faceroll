@@ -51,3 +51,16 @@ Rolls a character from the same `--seed/--vibe/--name/--body/--eyes/--mouth`
 flags, then animates `<state>` (one of the nine in `faceroll states`) with the
 suffix `  <Name> is <label>`. Uses `createTerminalPlayer`, so non-TTY output
 prints the still once instead of animating.
+
+## Presets (v0.3.0)
+
+```sh
+faceroll presets                              # list all 24 named faces
+faceroll roll --preset kitty                  # choose exactly one preset
+faceroll roll --preset bunny --body round     # override a single part
+faceroll roll --preset hacker --format json   # export a fixed preset
+```
+
+A preset selects fixed parts. Explicit `--body`, `--eyes`, and `--mouth`
+flags take precedence. Without a preset, rolls continue to obey seed, vibe,
+and locked part options.

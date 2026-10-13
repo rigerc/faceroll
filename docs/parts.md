@@ -2,7 +2,7 @@
 
 Defined in `src/parts.ts`. `partPool(kind, vibe)` filters these tables.
 
-## Bodies (11)
+## Bodies (27)
 
 | id | left | right | vibes | note |
 |---|---|---|---|---|
@@ -18,7 +18,7 @@ Defined in `src/parts.ts`. `partPool(kind, vibe)` filters these tables.
 | `curly` | `{` | `}` | weird | |
 | `owl` | `ʢ` | `ʡ` | weird | |
 
-## Eyes (6)
+## Eyes (16)
 
 Each eye defines glyph pairs for `open / blink / happy / wide / sad / angry / sleep`.
 
@@ -31,9 +31,9 @@ Each eye defines glyph pairs for `open / blink / happy / wide / sad / angry / sl
 | `box` | cool, weird | `■ ■` | `^ ^` | `◉ ◉` | `T T` | `ò ó` | `- -` |
 | `ring` | weird | `◔ ◔` | `◠ ◠` | `◉ ◉` | `╥ ╥` | `҂ ҂` | `ᴗ ᴗ` |
 
-All eyes blink as `- -`.
+Most eyes blink as `- -`; newly added styles may use their own blink glyphs.
 
-## Mouths (5)
+## Mouths (15)
 
 Each mouth defines glyphs for `calm / smile / big / open / sad / flat / unsure / angry / sleep`.
 
@@ -49,5 +49,26 @@ Each mouth defines glyphs for `calm / smile / big / open / sad / flat / unsure /
 
 `vibe` is `"any" | "cute" | "cool" | "weird"`. It only filters which ids a roll
 may pick — `createCharacter` and `editor.setParts` accept any valid id regardless
-of vibe. Pool sizes: 11 bodies, 6 eyes, 5 mouths → 330 part combinations × 9 states
-= 2,970 animations covered by tests.
+of vibe. Pool sizes: 27 bodies, 16 eyes, 15 mouths → 6,480 part combinations × 9 states
+= 58,320 animations covered by tests.
+
+## Added part IDs (v0.3.0)
+
+The original parts above remain available. New bodies:
+`square`, `double`, `flower`, `spark`, `cat`, `bunny`, `ghost`,
+`tentacle`, `robot`, `shield`, `arms`, `dancer`, `alien`,
+`diamond`, `frame`, `bat`.
+
+New eyes: `sparkle`, `star`, `wink`, `sleepy`, `pixel`, `cross`,
+`teary`, `triangle`, `shy`, `cat`.
+
+New mouths: `smirk`, `grin`, `tiny`, `cat`, `fang`, `pixel`,
+`oval`, `tongue`, `heart`, `scream`.
+
+The full glyph and vibe definitions are maintained in `src/parts.ts`.
+Use `faceroll parts`, `partPool(kind, vibe)`, or the exported `BODIES`,
+`EYES`, and `MOUTHS` arrays to inspect the complete catalog.
+
+See the new `src/presets.ts` catalog and `FACE_PRESETS` export for 24
+curated combinations. `getFacePreset(id)` validates a preset ID and
+`createPresetCharacter(id)` returns a complete animated character.

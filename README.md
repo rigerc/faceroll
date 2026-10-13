@@ -45,6 +45,36 @@ import { createCharacter } from "faceroll";
 const same = createCharacter(pixel.parts, { name: "Pixel" });
 ```
 
+## More faces and ready-made presets
+
+Faceroll v0.3.0 includes **27 bodies, 16 eye styles, and 15 mouths**: 6,480 possible
+part combinations, with all nine animated states per character. The 24 named
+presets provide recognizable starting faces grouped by `cute`, `cool`, and `weird`.
+
+```ts
+import { FACE_PRESETS, getFacePreset, createPresetCharacter, createFaceroll } from "faceroll";
+
+const names = FACE_PRESETS.map((preset) => preset.id);
+const kitty = createPresetCharacter("kitty", { name: "Pixel" });
+kitty.animations.idle.still; // "ฅ(≖ᆺ≖)ฅ"
+
+const editor = createFaceroll({ name: "Pixel" });
+editor.applyPreset("bunny");   // select a preset; undo history is retained
+editor.undo();                 // restore your previous face
+const style = getFacePreset("bunny").vibe; // "cute"
+```
+
+```sh
+faceroll presets
+faceroll roll --preset kitty
+faceroll roll --preset bunny --body round --format json
+```
+
+Explicit `--body`, `--eyes`, and `--mouth` flags override a preset's parts.
+When a preset is selected, seed and vibe do not change its predefined parts.
+Visit `examples/browser.html` (after building and serving the project) to
+browse the new **Face gallery**, including a style filter and preview.
+
 ## Play an animation
 
 `createPlayer` is a small timer loop. It calls `onFrame` right away with frame 0, then follows each frame's `ms`.
