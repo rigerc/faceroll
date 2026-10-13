@@ -1,0 +1,70 @@
+{
+  "name": "faceroll",
+  "version": "0.2.0",
+  "description": "Random, animated ASCII faces (asciimoji) for AI agents: idle, working, waiting, questioning and emotions.",
+  "keywords": [
+    "asciimoji",
+    "kaomoji",
+    "ascii",
+    "agent",
+    "ai",
+    "emoticon",
+    "animation",
+    "cli"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./terminal": {
+      "import": {
+        "types": "./dist/terminal.d.ts",
+        "default": "./dist/terminal.js"
+      },
+      "require": {
+        "types": "./dist/terminal.d.cts",
+        "default": "./dist/terminal.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "faceroll": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build",
+    "build:fallback": "node scripts/build-fallback.mjs",
+    "test:smoke": "node --test test/smoke.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsup": "^8.5.1",
+    "typescript": "5.9",
+    "vitest": "^5.0.4"
+  }
+}

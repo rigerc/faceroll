@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Faceroll browser example</title>
+<style>
+:root { font-family: system-ui, sans-serif; color-scheme: light dark; }
+body { max-width: 720px; margin: 2rem auto; padding: 0 1.25rem; }
+button, select, input { padding: .45rem .7rem; font: inherit; }
+button { cursor: pointer; }
+.controls { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; margin: 1rem 0; }
+.face { display: block; white-space: pre; font-size: clamp(2rem,10vw,4.5rem); min-height: 7rem; }
+.lock-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
+</style>
+</head>
+<body>
+<h1>Faceroll</h1>
+<p>Browser integration using the TypeScript core. The editor supports roll, undo, vibe selection, and per-part locks.</p>
+<div class="controls">
+  <label>Agent <input id="name" value="Pixel" maxlength="24"></label>
+  <label>State <select id="state"></select></label>
+  <label>Vibe <select id="vibe"><option>any</option><option>cute</option><option>cool</option><option>weird</option></select></label>
+</div>
+<div id="face" class="face" role="status" aria-live="off"></div>
+<div class="controls"><button id="roll">Roll</button><button id="undo">Undo</button><button id="pause">Pause</button></div>
+<div id="locks" class="lock-row"></div>
+<div class="controls">
+  <label>Export <select id="format"><option>prompt</option><option>markdown</option><option>json</option><option>node</option></select></label>
+  <button id="copy">Copy export</button>
+</div>
+<pre id="output"></pre>
+<script type="module">
+  // Serve the project root with a static HTTP server after `npm run build`.
+  // The bundle is plain ESM with no framework or Node runtime dependency.
+  import { createFaceroll, STATES } from "../dist/index.js";
+
+  const $ = (selector) => document.querySelector(selector);
+  // Persist the selected character and locks as plain config. No timers are saved.
+  const STORAGE_KEY = "faceroll:v2";
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch { /* storage may be unavailable */ }
+  let editor;
+  try { editor = createFaceroll({ name: "Pixel", ...(saved && typeof saved === "object" ? saved : {}) }); }
+  catch { editor = createFaceroll({ name: "Pixel" }); }
+  $("#name").value = editor.getConfig().name;
+  $("#vibe").value = editor.getConfig().vibe;
+  function persist() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(editor.getConfig())); }
+    catch { /* private browsing / restricted storage */ }
+  }
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let paused = reduceMotion.matches;
+  let state = "idle";
+  let started = performance.now();
+
+  for (const entry of STATES) {
+    const option = document.createElement("option");
+    option.value = entry.id;
+    option.textContent = entry.label;
+    $("#state").append(option);
+  }
+
+  function refresh() {
+    $("#output").textContent = editor.export($("#format").value);
+    persist();
+    $("#undo").disabled = editor.historyLength === 0;
+    $("#pause").textContent = paused ? "Play" : "Pause";
+    $("#locks").replaceChildren();
+    for (const part of ["body", "eyes", "mouth"]) {
+      const wrapper = document.createElement("label");
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = editor.isLocked(part);
+      check.addEventListener("change", () => { editor.setLocked(part, check.checked); refresh(); });
+      wrapper.append(check, ` Lock ${part} (${editor.getParts()[part]})`);
+      const reroll = document.createElement("button");
+      reroll.textContent = `Reroll ${part}`;
+      reroll.disabled = editor.isLocked(part);
+      reroll.addEventListener("click", () => { editor.reroll(part); started = performance.now(); refresh(); });
+      $("#locks").append(wrapper, reroll);
+    }
+  }
+
+  $("#roll").addEventListener("click", () => { editor.roll(); started = performance.now(); refresh(); });
+  $("#undo").addEventListener("click", () => { editor.undo(); started = performance.now(); refresh(); });
+  $("#pause").addEventListener("click", () => { paused = !paused; started = performance.now(); refresh(); });
+  $("#state").addEventListener("change", (event) => { state = event.target.value; started = performance.now(); });
+  $("#vibe").addEventListener("change", (event) => { editor.setVibe(event.target.value); started = performance.now(); refresh(); });
+  $("#format").addEventListener("change", refresh);
+  $("#name").addEventListener("input", (event) => { editor.setName(event.target.value); refresh(); });
+  $("#copy").addEventListener("click", async () => { await navigator.clipboard.writeText(editor.export($("#format").value)); });
+
+  function animate(now) {
+    // Keep the canvas entirely text-based; reduced-motion preference is honored.
+    $("#face").textContent = paused ? editor.getStill(state) : editor.getFrameAt(state, now - started);
+    requestAnimationFrame(animate);
+  }
+  refresh();
+  requestAnimationFrame(animate);
+</script>
+</body>
+</html>
