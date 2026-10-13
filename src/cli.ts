@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-import { listParts, rollCharacter, type Character } from "./character";
+import { createCharacter, listParts, rollCharacter, type Character } from "./character";
+import { FACE_PRESETS, getFacePreset } from "./presets";
+import type { Parts } from "./parts";
 import { serialize, toMarkdown, toNodeSource, toSystemPrompt } from "./export";
 import { STATES, STATE_NAMES, getState } from "./states";
 import { createTerminalPlayer } from "./terminal";
@@ -12,9 +14,11 @@ Usage
   faceroll play <state> [options]    Animate one state in the terminal
   faceroll states                    List the states and emotions
   faceroll parts                     List body, eyes and mouth ids
+  faceroll presets                   Browse 24 named faces
 
 Options
   --seed <text>      Same seed, same character
+  --preset <id>      Choose a named face (see "faceroll presets")
   --vibe <any|cute|cool|weird>
   --name <text>      Agent name (default "Agent")
   --body <id>        Lock the body
@@ -57,6 +61,14 @@ function roll(flags: Record<string, string>): Character {
   const lock: Record<string, string> = {};
   for (const k of ["body", "eyes", "mouth"]) if (flags[k]) lock[k] = flags[k] as string;
   try {
+    // Named presets choose fixed parts; explicit --body/--eyes/--mouth flags override them.
+    if (flags["preset"] !== undefined) {
+      const preset = getFacePreset(flags["preset"]);
+      const parts: Parts = { ...preset.parts, ...lock } as Parts;
+      return createCharacter(parts, {
+        ...(flags["name"] !== undefined ? { name: flags["name"] } : {}),
+      });
+    }
     return rollCharacter({
       vibe: vibe as Vibe,
       lock: lock as never,
@@ -118,6 +130,13 @@ async function main(): Promise<void> {
     case "states":
       process.stdout.write(STATES.map((s) => `${s.label.padEnd(12)} ${s.kind.padEnd(8)} ${s.use}`).join("\n") + "\n");
       return;
+    case "presets": {
+      process.stdout.write(FACE_PRESETS.map((preset) => {
+        const still = createCharacter({ ...preset.parts }).animations.idle.still;
+        return `${preset.id.padEnd(11)} ${preset.vibe.padEnd(6)} ${still.padEnd(16)} ${preset.label}`;
+      }).join("\n") + "\n");
+      return;
+    }
     case "parts": {
       const parts = listParts();
       process.stdout.write(

@@ -3,6 +3,7 @@ import { partPool, PART_KINDS, type PartKind, type Parts } from "./parts";
 import { pick, seededRng, type Rng } from "./rng";
 import { type StateName } from "./states";
 import { frameAt } from "./player";
+import { getFacePreset } from "./presets";
 import { serialize, toMarkdown, toNodeSource, toSystemPrompt } from "./export";
 import type { Vibe } from "./types";
 
@@ -113,6 +114,12 @@ export class Faceroll {
     this.pickNext(next, kind);
     this.commit(next);
     return true;
+  }
+
+  /** Choose a named face; record undo history while retaining locks. */
+  applyPreset(id: string): void {
+    const preset = getFacePreset(id);
+    this.commit({ ...preset.parts });
   }
 
   /** Undo the last successful roll or reroll. Locks and vibe are unchanged. */
