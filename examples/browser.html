@@ -6,12 +6,20 @@
 <title>Faceroll browser example</title>
 <style>
 :root { font-family: system-ui, sans-serif; color-scheme: light dark; }
-body { max-width: 720px; margin: 2rem auto; padding: 0 1.25rem; }
+body { max-width: 900px; margin: 2rem auto; padding: 0 1.25rem; }
 button, select, input { padding: .45rem .7rem; font: inherit; }
 button { cursor: pointer; }
 .controls { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; margin: 1rem 0; }
 .face { display: block; white-space: pre; font-size: clamp(2rem,10vw,4.5rem); min-height: 7rem; }
 .lock-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: .7rem; margin: 1rem 0 1.75rem; }
+.preset { padding: .8rem .5rem; border: 1px solid currentColor; border-radius: 12px; background: transparent; text-align: center; min-height: 95px; }
+.preset:hover, .preset:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.preset[aria-pressed="true"] { background: #8883; border-width: 2px; }
+.preset .preview { display: block; white-space: pre; font-family: "Noto Sans JP", "Segoe UI Symbol", "Apple Symbols", system-ui, sans-serif; font-size: 1.35rem; margin-bottom: .35rem; }
+.preset .title { display: block; font-weight: 600; }
+.preset .tag { display: block; opacity: .7; font-size: .75rem; }
+.gallery-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; }
 pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
 </style>
 </head>
@@ -26,6 +34,12 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
 <div id="face" class="face" role="status" aria-live="off"></div>
 <div class="controls"><button id="roll">Roll</button><button id="undo">Undo</button><button id="pause">Pause</button></div>
 <div id="locks" class="lock-row"></div>
+<section aria-labelledby="gallery-title">
+  <h2 id="gallery-title">Face gallery</h2>
+  <p>Choose a starter face, then customize it using Roll or individual rerolls above.</p>
+  <div class="gallery-tools"><label>Show <select id="filter"><option value="any">All styles</option><option value="cute">Cute</option><option value="cool">Cool</option><option value="weird">Weird</option></select></label><span id="count"></span></div>
+  <div id="gallery" class="gallery"></div>
+</section>
 <div class="controls">
   <label>Export <select id="format"><option>prompt</option><option>markdown</option><option>json</option><option>node</option></select></label>
   <button id="copy">Copy export</button>
@@ -34,7 +48,7 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
 <script type="module">
   // Serve the project root with a static HTTP server after `npm run build`.
   // The bundle is plain ESM with no framework or Node runtime dependency.
-  import { createFaceroll, STATES } from "../dist/index.js";
+  import { createFaceroll, createPresetCharacter, FACE_PRESETS, STATES } from "../dist/index.js";
 
   const $ = (selector) => document.querySelector(selector);
   // Persist the selected character and locks as plain config. No timers are saved.
@@ -62,8 +76,39 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
     $("#state").append(option);
   }
 
+  let selectedPreset = "";
+  function gallery() {
+    const filter = $("#filter").value;
+    const showing = FACE_PRESETS.filter((preset) => filter === "any" || preset.vibe === filter);
+    $("#count").textContent = showing.length + " presets";
+    $("#gallery").replaceChildren();
+    for (const preset of showing) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "preset";
+      button.setAttribute("aria-pressed", String(selectedPreset === preset.id));
+      const preview = document.createElement("span");
+      preview.className = "preview";
+      preview.textContent = createPresetCharacter(preset.id).animations.idle.still;
+      const title = document.createElement("span");
+      title.className = "title";
+      title.textContent = preset.label;
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = preset.vibe;
+      button.append(preview, title, tag);
+      button.addEventListener("click", () => {
+        editor.applyPreset(preset.id);
+        selectedPreset = preset.id;
+        started = performance.now();
+        refresh();
+      });
+      $("#gallery").append(button);
+    }
+  }
   function refresh() {
     $("#output").textContent = editor.export($("#format").value);
+    gallery();
     persist();
     $("#undo").disabled = editor.historyLength === 0;
     $("#pause").textContent = paused ? "Play" : "Pause";
@@ -78,17 +123,18 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
       const reroll = document.createElement("button");
       reroll.textContent = `Reroll ${part}`;
       reroll.disabled = editor.isLocked(part);
-      reroll.addEventListener("click", () => { editor.reroll(part); started = performance.now(); refresh(); });
+      reroll.addEventListener("click", () => { selectedPreset = ""; editor.reroll(part); started = performance.now(); refresh(); });
       $("#locks").append(wrapper, reroll);
     }
   }
 
-  $("#roll").addEventListener("click", () => { editor.roll(); started = performance.now(); refresh(); });
-  $("#undo").addEventListener("click", () => { editor.undo(); started = performance.now(); refresh(); });
+  $("#roll").addEventListener("click", () => { selectedPreset = ""; editor.roll(); started = performance.now(); refresh(); });
+  $("#undo").addEventListener("click", () => { selectedPreset = ""; editor.undo(); started = performance.now(); refresh(); });
   $("#pause").addEventListener("click", () => { paused = !paused; started = performance.now(); refresh(); });
   $("#state").addEventListener("change", (event) => { state = event.target.value; started = performance.now(); });
-  $("#vibe").addEventListener("change", (event) => { editor.setVibe(event.target.value); started = performance.now(); refresh(); });
+  $("#vibe").addEventListener("change", (event) => { selectedPreset = ""; editor.setVibe(event.target.value); started = performance.now(); refresh(); });
   $("#format").addEventListener("change", refresh);
+  $("#filter").addEventListener("change", gallery);
   $("#name").addEventListener("input", (event) => { editor.setName(event.target.value); refresh(); });
   $("#copy").addEventListener("click", async () => { await navigator.clipboard.writeText(editor.export($("#format").value)); });
 

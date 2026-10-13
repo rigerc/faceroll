@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 — Expanded faces and curated presets
+
+- Expanded the catalog from 11/6/5 to 27 bodies, 16 eyes and 15 mouths,
+  enabling 6,480 part combinations with the existing nine animations.
+- Added 24 immutable, named presets with lookup and character generation APIs,
+  plus `Faceroll.applyPreset()` with undo and unchanged lock settings.
+- Added `faceroll presets` and `--preset` for CLI discovery and selection.
+- Added a responsive, filterable Face gallery to the browser example.
+- Added tests for presets, the expanded animation matrix and CLI integration.
+- Preserved existing part IDs, nine animation states and original frame timings.
+
+
 ## 0.2.0 — Merged TypeScript library
 
 - Added `createFaceroll()` / `Faceroll` stateful editor with persistent part locks,

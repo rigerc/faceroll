@@ -3,6 +3,9 @@ import {
   BODIES,
   EYES,
   MOUTHS,
+  FACE_PRESETS,
+  getFacePreset,
+  createPresetCharacter,
   STATES,
   STATE_NAMES,
   cellWidth,
@@ -463,5 +466,39 @@ describe("node source output", () => {
     stop();
     expect(canceled).toBe(true);
     expect(messages[messages.length - 1]).toBe("\r\x1b[K");
+  });
+});
+
+describe("expanded faces and presets", () => {
+  it("offers 6480 character combinations across the original nine states", () => {
+    expect(BODIES).toHaveLength(27);
+    expect(EYES).toHaveLength(16);
+    expect(MOUTHS).toHaveLength(15);
+    expect(BODIES.length * EYES.length * MOUTHS.length).toBe(6480);
+    expect(STATES).toHaveLength(9);
+  });
+
+  it("provides 24 named, unique, frozen presets", () => {
+    expect(FACE_PRESETS).toHaveLength(24);
+    expect(new Set(FACE_PRESETS.map((p) => p.id)).size).toBe(24);
+    expect(Object.isFrozen(FACE_PRESETS)).toBe(true);
+    for (const preset of FACE_PRESETS) {
+      expect(Object.isFrozen(preset)).toBe(true);
+      expect(Object.isFrozen(preset.parts)).toBe(true);
+      expect(createPresetCharacter(preset.id).animations.idle.still).toBeTruthy();
+    }
+    expect(createPresetCharacter("classic").animations.idle.still).toBe("(•ω•)");
+    expect(createPresetCharacter("kitty").animations.idle.still).toBe("ฅ(≖ᆺ≖)ฅ");
+    expect(() => getFacePreset("unknown")).toThrow(/Unknown face preset/);
+  });
+
+  it("applies presets in the editor without changing part locks, with undo", () => {
+    const editor = createFaceroll({ seed: "editor", locks: { body: true } });
+    editor.applyPreset("bunny");
+    expect(editor.getParts()).toEqual(getFacePreset("bunny").parts);
+    expect(editor.isLocked("body")).toBe(true);
+    expect(editor.historyLength).toBe(1);
+    expect(editor.undo()).toBe(true);
+    expect(editor.getParts()).toEqual({ body: "round", eyes: "dot", mouth: "w" });
   });
 });
