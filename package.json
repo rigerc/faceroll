@@ -39,13 +39,26 @@
         "default": "./dist/terminal.cjs"
       }
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./react": {
+      "types": "./integrations/react.d.ts",
+      "import": "./integrations/react.js"
+    },
+    "./vue": {
+      "types": "./integrations/vue.d.ts",
+      "import": "./integrations/vue.js"
+    },
+    "./web-component": {
+      "types": "./integrations/web-component.d.ts",
+      "import": "./integrations/web-component.js"
+    }
   },
   "bin": {
     "faceroll": "./dist/cli.js"
   },
   "files": [
     "dist",
+    "integrations",
     "examples",
     "README.md",
     "LICENSE"
@@ -66,5 +79,17 @@
     "tsup": "^8.5.1",
     "typescript": "5.9",
     "vitest": "^5.0.4"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "vue": ">=3.3"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
   }
 }
