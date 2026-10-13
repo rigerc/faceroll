@@ -209,6 +209,10 @@ localStorage and respects reduced-motion settings.
 
 ## Development
 
+Full guides in [docs/](docs/): [API](docs/api.md), [parts](docs/parts.md),
+[animations](docs/animations.md), [CLI](docs/cli.md), [editor](docs/editor.md),
+[integration](docs/integration.md), [development](docs/development.md).
+
 ```sh
 npm install
 npm test          # vitest
