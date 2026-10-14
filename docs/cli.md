@@ -5,6 +5,7 @@ Binary: `faceroll` → `./dist/cli.js`. Requires a build first (`npm run build`)
 ```
 faceroll roll [options]            Print a rolled character
 faceroll play <state> [options]    Animate one state in the terminal
+faceroll children [options]        Derive project thread faces
 faceroll states                    List the states and emotions
 faceroll parts                     List body, eyes and mouth ids
 ```
@@ -21,6 +22,9 @@ faceroll parts                     List body, eyes and mouth ids
 | `--mouth <id>` | roll, play | — | Lock mouth |
 | `--format <text\|prompt\|markdown\|json\|node>` | roll | `text` | Output format |
 | `--duration <ms>` | play | `4000` | How long to animate |
+| `--count <n>` | children | `5` | Generate the first n stable thread slots |
+| `--index <n>` | children | — | Generate exactly one zero-based slot (exclusive with --count) |
+| `--format <text\|json>` | children | `text` | Human-readable or full JSON snapshot output |
 | `-h, --help` | — | — | Print help |
 
 Unknown vibes, formats, states, part ids, negative durations, and missing
@@ -68,3 +72,20 @@ and locked part options.
 
 Omit `--name` for a stable, unique human name per part configuration. Use
 `--name Pixel` to override it; a blank name uses automatic naming.
+
+## Project/thread family (`children`)
+
+```sh
+faceroll children --preset kitty --count 5 --seed my-project
+faceroll children --preset kitty --index 2 --seed my-project --format json
+```
+
+Parent selection uses the regular `--preset`, `--body`, `--eyes`,
+`--mouth`, `--name`, `--vibe` and `--seed` flags. With a preset, the seed
+controls only the order of child variants. Without a preset it also selects
+parent parts. Each child keeps the parent body while varying eyes and/or mouth.
+Slots are reproducible for fixed parent parts and family seed; assign a slot
+when a new thread is created and store it with the thread. The plain-text
+format shows the parent and numbered children. JSON contains the parent snapshot
+and an array of `{ index, character }` entries. The command rejects invalid or
+out-of-capacity requests instead of returning duplicate faces.
