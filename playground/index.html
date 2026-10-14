@@ -3,23 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Customize a kaomoji, preview its expressions, and export it with Faceroll.">
+  <meta name="description" content="Build a text character for your AI agent, preview its expressions, and export it with Faceroll.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Faceroll">
-  <meta property="og:title" content="Faceroll — Kaomoji playground">
-  <meta property="og:description" content="Customize a kaomoji, preview its expressions, and export it with Faceroll.">
+  <meta property="og:title" content="Faceroll — Character studio">
+  <meta property="og:description" content="Build a text character for your AI agent, preview its expressions, and export it with Faceroll.">
   <meta name="twitter:card" content="summary">
-  <meta name="theme-color" content="#f7f8f2">
-  <title>Faceroll — Kaomoji playground</title>
+  <meta name="theme-color" content="#f5f2e9">
+  <title>Faceroll — Character studio</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='28' fill='%23d9edb8'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-size='33'%3E(•ω•)%3C/text%3E%3C/svg%3E">
   <script src="./theme.js"></script>
   <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./studio.css">
   <script type="module" src="./app.js"></script>
 </head>
 <body>
   <a class="skip" href="#workspace">Skip to playground</a>
   <header class="topbar">
-    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">(•ω•)</span> faceroll<span class="version">playground</span></a>
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">(•ω•)</span> faceroll<span class="version">/ studio</span></a>
     <div class="header-actions">
       <label class="theme-control"><span>Theme</span><select id="theme" disabled><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
       <a class="source-link" aria-label="GitHub" href="https://github.com/rigerc/faceroll" target="_blank" rel="noreferrer"><span>GitHub</span> <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
@@ -27,17 +28,24 @@
   </header>
   <main>
     <section class="intro" aria-labelledby="title">
-      <div><h1 id="title">Kaomoji playground</h1><p class="subtitle">Meet a named face, edit its parts, and preview each expression.</p></div>
+      <div class="intro-copy"><h1 id="title">A little face. A lot of personality.</h1><p class="subtitle">Create an expressive text character for your AI agent. Find a starting point, make it yours, and take it into your code.</p></div>
+      <div class="intro-aside"><span class="intro-symbol" aria-hidden="true">ʕ•ᴥ•ʔ</span><span>Built for expressive agents.</span></div>
     </section>
-    <section id="workspace" class="workspace" aria-label="Character playground">
+    <section id="workspace" class="workspace" aria-label="Faceroll character studio">
+          <aside class="gallery-section" aria-labelledby="gallery-title">
+      <div class="section-heading"><div><h2 id="gallery-title">Face library <span id="preset-count" class="count"></span></h2></div><label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search names or presets" aria-label="Search names or presets"></label></div>
+      <div id="filters" class="filters" role="group" aria-label="Filter presets"><button data-filter="any" aria-pressed="true">All faces</button><button data-filter="cute" aria-pressed="false">Cute</button><button data-filter="cool" aria-pressed="false">Cool</button><button data-filter="weird" aria-pressed="false">Weird</button></div>
+      <div id="gallery" class="gallery"></div><p id="empty" class="empty" hidden>No faces found. Try another name or style.</p>
+    </aside>
       <div class="preview-panel">
-        <div class="panel-bar"><h2>Preview</h2><span id="motion-status" class="badge">Animating</span></div>
-        <div class="stage"><div class="stage-caption" id="character-caption">Character</div><div class="face-wrap"><span id="face" class="face" role="img" aria-label="Character preview"></span></div><p class="state-say"><span class="sample-label">Example:</span> <span id="state-say"></span></p><button id="copy-face" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy face</button></div>
+        <div class="panel-bar"><h2>Live preview</h2><span id="motion-status" class="badge">Animating</span></div>
+        <div class="stage"><div class="specimen-status"><span class="specimen-dot" aria-hidden="true"></span><span id="current-state">Idle</span> expression</div><div class="stage-caption" id="character-caption">Character</div><div class="face-wrap"><span id="face" class="face" role="img" aria-label="Character preview"></span></div><p class="state-say"><span class="sample-label">Example:</span> <span id="state-say"></span></p><button id="copy-face" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy face</button></div>
         <div class="playback"><button id="play" class="small-button" aria-pressed="true">Pause</button><label class="speed-label">Speed <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label><span id="animation-info" class="muted"></span></div>
-        <div class="mood-area"><div class="mood-heading"><h3>Moods</h3><button id="cycle-moods" class="small-button" type="button" aria-pressed="false" title="Play one animation loop per mood, then move to the next">Cycle moods</button></div><div id="states" class="states" role="group" aria-label="Animation state"></div></div>
+        <div class="mood-area"><div class="mood-heading"><h3>States &amp; emotions</h3><button id="cycle-moods" class="small-button" type="button" aria-pressed="false" title="Play one animation loop per mood, then move to the next">Cycle moods</button></div><div id="states" class="states" role="group" aria-label="Animation state"></div></div>
+    <section class="timeline-section" aria-labelledby="timeline-title"><div class="section-heading"><h2 id="timeline-title">Frames</h2><p>Select a frame to pause on it.</p></div><div id="frames" class="frames" role="group" aria-label="Animation frames"></div></section>
       </div>
       <aside class="editor-panel" aria-labelledby="editor-title">
-        <div class="panel-bar"><h2 id="editor-title">Character</h2><button id="undo" class="text-button" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12"/></svg>Undo</button></div>
+        <div class="panel-bar"><h2 id="editor-title">Customize</h2><button id="undo" class="text-button" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12"/></svg>Undo</button></div>
         <label class="field"><span class="name-heading">Character name<span id="name-mode" class="badge">Automatic</span></span><input id="name" maxlength="40" placeholder="Automatic name" autocomplete="off" aria-describedby="name-hint"></label>
         <div class="name-controls"><p id="name-hint" class="name-hint">This name follows the face. Type your own to keep it.</p><button id="auto-name" class="text-button" type="button" disabled>Use automatic name</button></div>
         <label class="field">Roll style<select id="vibe"><option value="any">Any</option><option value="cute">Cute</option><option value="cool">Cool</option><option value="weird">Weird</option></select></label>
@@ -48,7 +56,7 @@
         <button id="roll" class="primary-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 2 4 4-4 4M2 18h2.5c6 0 9-12 15-12H22m-4 8 4 4-4 4M2 6h2.5c2.2 0 4 1.6 5.5 4m4 4c1.5 2.4 3.3 4 5.5 4H22"/></svg>Roll face</button>
       </aside>
     </section>
-    <section class="timeline-section" aria-labelledby="timeline-title"><div class="section-heading"><h2 id="timeline-title">Frames</h2><p>Select a frame to pause on it.</p></div><div id="frames" class="frames" role="group" aria-label="Animation frames"></div></section>
+
     <section class="family-section" aria-labelledby="family-title">
       <div class="section-heading"><div><h2 id="family-title">Thread family</h2><p>Use this character as a project parent. Each thread gets a stable, related face.</p></div><button id="copy-family" class="small-button" type="button">Copy family JSON</button></div>
       <div class="family-controls">
@@ -59,16 +67,12 @@
       <div class="family-parent" id="family-parent"></div>
       <div id="family-children" class="family-grid" aria-live="polite"></div>
     </section>
-    <section class="gallery-section" aria-labelledby="gallery-title">
-      <div class="section-heading"><div><h2 id="gallery-title">Presets <span id="preset-count" class="count"></span></h2></div><label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search names or presets" aria-label="Search names or presets"></label></div>
-      <div id="filters" class="filters" role="group" aria-label="Filter presets"><button data-filter="any" aria-pressed="true">All faces</button><button data-filter="cute" aria-pressed="false">Cute</button><button data-filter="cool" aria-pressed="false">Cool</button><button data-filter="weird" aria-pressed="false">Weird</button></div>
-      <div id="gallery" class="gallery"></div><p id="empty" class="empty" hidden>No faces found. Try another name or style.</p>
-    </section>
-    <section class="export-section" aria-labelledby="export-title"><div class="export-heading"><div><h2 id="export-title">Export character</h2><p class="muted">Copy or download a system prompt, JSON, Markdown, or Node.js source.</p></div><div class="export-actions"><button id="download" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5"/></svg>Download</button><button id="copy-export" class="dark-button">Copy export</button></div></div><div class="code-panel"><div id="formats" class="formats" role="group" aria-label="Export format"><button data-format="prompt" aria-pressed="true">System prompt</button><button data-format="json" aria-pressed="false">JSON</button><button data-format="markdown" aria-pressed="false">Markdown</button><button data-format="node" aria-pressed="false">Node.js</button></div><pre id="output" tabindex="0" aria-label="Character export"></pre></div></section>
+
+    <section class="export-section" aria-labelledby="export-title"><div class="export-heading"><div><h2 id="export-title">Ready to ship?</h2><p class="muted">Choose a format, then copy or download your character.</p></div><div class="export-actions"><button id="download" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5"/></svg>Download</button><button id="copy-export" class="dark-button">Copy export</button></div></div><div class="code-panel"><div id="formats" class="formats" role="group" aria-label="Export format"><button data-format="prompt" aria-pressed="true">System prompt</button><button data-format="json" aria-pressed="false">JSON</button><button data-format="markdown" aria-pressed="false">Markdown</button><button data-format="node" aria-pressed="false">Node.js</button></div><pre id="output" tabindex="0" aria-label="Character export"></pre></div></section>
     <p id="notice" class="notice" role="status" aria-live="polite"></p>
     <noscript><p>This playground needs JavaScript to generate and animate faces.</p></noscript>
   </main>
-  <footer><span class="brand-text">faceroll <span aria-hidden="true">(˘ω˘)</span></span><span>Built with the Faceroll library.</span></footer>
+  <footer><span class="brand-text">faceroll <span aria-hidden="true">(˘ω˘)</span></span><span>Small characters, expressive agents.</span><a href="https://github.com/rigerc/faceroll" target="_blank" rel="noreferrer">View source ↗</a></footer>
 </body>
 </html>
 
