@@ -178,7 +178,7 @@ test("Studio ships both themes, brand vectors and compact mobile workspaces", as
   assert.match(html, /src="\.\/studio\.js"/);
   assert.match(studio, /family-peek-faces/);
   assert.match(studio, /mobile-dock/);
-  assert.match(studio, /data\.panel/);
+  assert.match(studio, /dataset\.panel/);
   assert.match(studio, /derive|familyGrid/);
   assert.match(css, /data-theme="dark"/);
   assert.match(css, /data-mobile-panel="family"/);
