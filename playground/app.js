@@ -151,7 +151,9 @@ function renderAnimation() {
   const animation = editor.getAnimation(state);
   $("#face").style.minWidth = `${animation.width}ch`;
   $("#face").setAttribute("aria-label", `${editor.getConfig().name || "Character"}, ${state} expression`);
-  $("#state-say").textContent = STATES.find(entry => entry.id === state).say;
+  const activeState = STATES.find(entry => entry.id === state);
+  $("#current-state").textContent = activeState.label;
+  $("#state-say").textContent = activeState.say;
   $("#animation-info").textContent = `${animation.frames.length} frames · ${(animation.duration / 1000).toFixed(2)}s loop`;
   stateButtons.forEach((button, id) => button.setAttribute("aria-pressed", String(id === state)));
   frameButtons = animation.frames.map((frame, index) => {
