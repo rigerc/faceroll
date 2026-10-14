@@ -49,6 +49,16 @@
       </aside>
     </section>
     <section class="timeline-section" aria-labelledby="timeline-title"><div class="section-heading"><h2 id="timeline-title">Frames</h2><p>Select a frame to pause on it.</p></div><div id="frames" class="frames" role="group" aria-label="Animation frames"></div></section>
+    <section class="family-section" aria-labelledby="family-title">
+      <div class="section-heading"><div><h2 id="family-title">Thread family</h2><p>Use this character as a project parent. Each thread gets a stable, related face.</p></div><button id="copy-family" class="small-button" type="button">Copy family JSON</button></div>
+      <div class="family-controls">
+        <label>Project / family seed <input id="family-seed" type="text" maxlength="100" value="my-project" autocomplete="off" aria-describedby="family-hint"></label>
+        <label>Threads <input id="family-count" type="number" min="1" max="20" step="1" value="5"></label>
+        <p id="family-hint" class="muted">Save the seed and each thread's zero-based slot. Adding threads never changes earlier slots.</p>
+      </div>
+      <div class="family-parent" id="family-parent"></div>
+      <div id="family-children" class="family-grid" aria-live="polite"></div>
+    </section>
     <section class="gallery-section" aria-labelledby="gallery-title">
       <div class="section-heading"><div><h2 id="gallery-title">Presets <span id="preset-count" class="count"></span></h2></div><label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search names or presets" aria-label="Search names or presets"></label></div>
       <div id="filters" class="filters" role="group" aria-label="Filter presets"><button data-filter="any" aria-pressed="true">All faces</button><button data-filter="cute" aria-pressed="false">Cute</button><button data-filter="cool" aria-pressed="false">Cool</button><button data-filter="weird" aria-pressed="false">Weird</button></div>
