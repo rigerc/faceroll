@@ -164,3 +164,25 @@ test("preview server serves the built playground and rejects traversal and write
   assert.equal(await head.text(), "");
 });
 
+
+
+test("Studio ships both themes, brand vectors and compact mobile workspaces", async () => {
+  const root = new URL("../playground-dist/", import.meta.url);
+  const html = await readFile(new URL("index.html", root), "utf8");
+  const studio = await readFile(new URL("studio.js", root), "utf8");
+  const css = await readFile(new URL("studio.css", root), "utf8");
+  for (const hook of ["face", "roll", "parts", "states", "family-children", "output", "theme"]) {
+    assert.match(html, new RegExp('id="' + hook + '"'));
+  }
+  assert.match(html, /href="\.\/studio\.css"/);
+  assert.match(html, /src="\.\/studio\.js"/);
+  assert.match(studio, /family-peek-faces/);
+  assert.match(studio, /mobile-dock/);
+  assert.match(studio, /data\.panel/);
+  assert.match(studio, /derive|familyGrid/);
+  assert.match(css, /data-theme="dark"/);
+  assert.match(css, /data-mobile-panel="family"/);
+  for (const name of ["faceroll-icon.svg", "faceroll-emoticon-color.svg", "faceroll-emoticon-reversed.svg"]) {
+    assert.match(await readFile(new URL("assets/" + name, root), "utf8"), /<svg/);
+  }
+});
