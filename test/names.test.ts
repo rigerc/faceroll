@@ -5,19 +5,50 @@ import {
   seededRng, serialize, toMarkdown, toNodeSource, toSystemPrompt,
 } from "../src/index";
 
+// The original 81-entry pool. These entries keep their order inside the larger
+// pool, so slots 0..80 must still resolve to them in this sequence.
+const ORIGINAL_FIRST_NAMES = [
+  "Milo", "Lucy", "Theo", "Daisy", "Finn", "Lily", "Leo", "Ella", "Ollie",
+  "Ruby", "Noah", "Sophie", "Oscar", "Rosie", "Teddy", "Alice", "Archie",
+  "Molly", "Charlie", "Clara", "Jamie", "Ivy", "Felix", "Nora", "Ben",
+  "Maisie", "Henry", "Poppy", "Jude", "Emma", "Louie", "Evie", "Max",
+  "Grace", "Sam", "Hazel", "Toby", "Chloe", "Eli", "Mia", "Hugo",
+  "Ada", "Luca", "Millie", "Jack", "Flora", "Liam", "Willa", "Arlo",
+  "Isla", "Jasper", "Mabel", "Alex", "Olive", "Robin", "Elsie", "Tom",
+  "Annie", "Rowan", "Bella", "George", "Edie", "Miles", "Cora", "Alfie",
+  "Freya", "Oliver", "June", "Elliot", "Violet", "Rory", "Stella", "Emil",
+  "Lottie", "Louis", "Iris", "Sebastian", "Eliza", "Arthur", "Matilda", "Owen",
+];
+
 describe("automatic character names", () => {
-  it("allocates 6480 distinct human names, including preferred bear mouths", () => {
-    const names = new Set<string>();
+  it("assigns one of 324 single-word names, reusing each exactly 20 times", () => {
+    const counts = new Map<string, number>();
     for (const body of BODIES) for (const eyes of EYES) for (const mouth of MOUTHS) {
       const name = nameForParts({ body: body.id, eyes: eyes.id, mouth: mouth.id });
-      expect(name).toMatch(/^[A-Z][a-z]+ [A-Z][a-z]+$/);
-      expect(names.has(name)).toBe(false);
-      names.add(name);
+      expect(name).toMatch(/^[A-Z][a-z]{2,8}$/);
+      expect(name).not.toMatch(/\s/);
+      counts.set(name, (counts.get(name) ?? 0) + 1);
     }
-    expect(names.size).toBe(6480);
-    // Protect existing allocations from accidental list edits or reordering.
-    expect(nameForParts({ body: "round", eyes: "dot", mouth: "w" })).toBe("Milo Bennett");
-    expect(nameForParts({ body: "bat", eyes: "cat", mouth: "scream" })).toBe("Maisie Stewart");
+    expect(counts.size).toBe(324);
+    for (const count of counts.values()) expect(count).toBe(20);
+    // Protect the original 81 names and their slots from accidental list edits or reordering.
+    expect(nameForParts({ body: "round", eyes: "dot", mouth: "w" })).toBe("Milo");
+    expect(nameForParts({ body: "bat", eyes: "cat", mouth: "scream" })).toBe("Bjorn");
+  });
+
+  it("keeps the original 81 first names, in order, as the first pool entries", () => {
+    // Every slot 0..80 must map back to the original names, in their original order.
+    for (let slot = 0; slot < ORIGINAL_FIRST_NAMES.length; slot++) {
+      let index = 0;
+      while ((index * 137) % 6480 !== slot) index++;
+      const rest = index % (EYES.length * MOUTHS.length);
+      expect(nameForParts({
+        body: BODIES[Math.floor(index / (EYES.length * MOUTHS.length))]!.id,
+        eyes: EYES[Math.floor(rest / MOUTHS.length)]!.id,
+        mouth: MOUTHS[rest % MOUTHS.length]!.id,
+      })).toBe(ORIGINAL_FIRST_NAMES[slot]);
+    }
+    expect(ORIGINAL_FIRST_NAMES).toHaveLength(81);
   });
 
   it("uses the same name for exact parts, presets, and seeded rolls", () => {

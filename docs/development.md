@@ -7,6 +7,7 @@ npm install
 npm test          # vitest (test/faceroll.test.ts)
 npm run typecheck # tsc --noEmit
 npm run build     # tsup: ESM + CJS + .d.ts + CLI
+npm run check:size      # scripts/check-size.mjs — gzip budget per entrypoint
 npm run test:smoke       # node --test test/smoke.test.mjs (prebuilt dist)
 npm run build:fallback   # scripts/build-fallback.mjs — tsc when tsup is unavailable
 npm run playground      # build and serve the playground at http://127.0.0.1:4173
@@ -66,6 +67,8 @@ playground/             framework-free frontend (imports its packaged lib/index.
 scripts/build-playground.mjs  copies frontend and library into playground-dist/
 scripts/serve-playground.mjs  local static server for playground-dist/
 scripts/build-fallback.mjs
+scripts/check-size.mjs    gzip budget per entrypoint
+scripts/size-baseline.json  recorded gzip sizes to compare against
 ```
 
 ## Tests
@@ -83,6 +86,11 @@ build. `test/smoke.test.mjs` repeats 6 of these against `dist/` with plain
 `dist/index.cjs`, `dist/terminal.cjs`), and `.d.ts` files; `dist/cli.js` is the
 executable. Package exports map `faceroll` → ESM/CJS and `faceroll/terminal` →
 terminal entry. `files` ships `dist`, `examples`, `README.md`, `LICENSE`.
+
+`npm run check:size` gzips each entrypoint at level 9 and compares it with
+`scripts/size-baseline.json`, failing above 2 KiB of growth (1 KiB is flagged as
+over the preferred budget). Run it after `npm run build` and re-record with
+`node scripts/check-size.mjs --write` only when a growth is intended.
 
 ## Commit style
 

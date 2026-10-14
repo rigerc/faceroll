@@ -142,8 +142,11 @@ import { toSystemPrompt, toMarkdown, serialize, deserialize, toNodeSource } from
 
 ## Automatic identity
 
-`nameForParts(parts)` returns a stable first name and surname, unique across the
-6,480 supported part configurations. It uses no randomness. Automatic names follow
-part rerolls; custom names remain fixed. `nameMode: "auto"` restores automatic
-naming even if a saved name is supplied. A blank name also selects automatic naming.
-Legacy snapshots with a nonblank name and no mode are treated as custom.
+`nameForParts(parts)` returns a stable, single-word first name drawn from a curated
+pool of 324 names. It uses no randomness. Every one of the 6,480 supported part
+configurations receives a name, and each name is used by exactly 20 configurations,
+so different faces may share a name: identity comes from the parts, not the name.
+Automatic names follow part rerolls; custom names remain fixed and may contain
+spaces. `nameMode: "auto"` restores automatic naming even if a saved name is
+supplied. A blank name also selects automatic naming. Legacy snapshots with a
+nonblank name and no mode are treated as custom.

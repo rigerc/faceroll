@@ -82,14 +82,15 @@ test("preset search combines style and normalized text and permits empty results
   assert.ok(filterPresets(FACE_PRESETS, "weird", "weird").every(preset => preset.vibe === "weird"));
 });
 
-test("preset search finds generated first names and surnames alongside preset labels", () => {
+test("preset search finds generated single-word names alongside preset labels", () => {
   const classic = FACE_PRESETS.find(preset => preset.id === "classic");
   const name = nameForParts(classic.parts);
-  assert.deepEqual(filterPresets(FACE_PRESETS, "any", ` ${name.toUpperCase()} `).map(preset => preset.id), ["classic"]);
-  for (const word of name.split(" ")) {
-    assert.ok(filterPresets(FACE_PRESETS, "cute", word).some(preset => preset.id === "classic"));
-  }
-  assert.equal(filterPresets(FACE_PRESETS, "cool", name).length, 0);
+  // Automatic names are reused, so a search can return several presets: only require membership.
+  const ids = filterPresets(FACE_PRESETS, "any", ` ${name.toUpperCase()} `).map(preset => preset.id);
+  assert.ok(ids.includes("classic"));
+  assert.ok(filterPresets(FACE_PRESETS, "cute", name).some(preset => preset.id === "classic"));
+  assert.equal(filterPresets(FACE_PRESETS, "cool", name).filter(preset => preset.id === "classic").length, 0);
+  assert.ok(filterPresets(FACE_PRESETS, "any", "classic").some(preset => preset.id === "classic"));
 });
 
 test("download names are safe and match export content", () => {

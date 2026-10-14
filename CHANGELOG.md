@@ -2,7 +2,14 @@
 
 ## Unreleased
 
-- Assign distinct, stable human names to all 6,480 face configurations by default.
+- Assign a short, single-word name to every character by default, selected
+  deterministically from a curated pool of 324 first names. The original 81 names
+  are retained in order; the surname list is gone. Each name is shared by exactly
+  20 of the 6,480 face configurations, so different faces may now share a name —
+  previously generated automatic display names change, while their parts,
+  animations and deterministic reproducibility do not.
+- Add `npm run check:size` to report gzip sizes per entrypoint and fail when growth
+  over `scripts/size-baseline.json` exceeds 2 KiB.
 - Preserve automatic/custom naming mode in editor configs, JSON and MCP snapshots.
 - Follow part changes and undo with automatic names; preserve custom and legacy names.
 - Use automatic names in the playground, browser example, CLI and Web Component.
