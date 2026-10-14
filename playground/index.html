@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#f7f8f2">
   <title>Faceroll — Kaomoji playground</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='28' fill='%23d9edb8'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-size='33'%3E(•ω•)%3C/text%3E%3C/svg%3E">
+  <script src="./theme.js"></script>
   <link rel="stylesheet" href="./style.css">
   <script type="module" src="./app.js"></script>
 </head>
@@ -14,7 +15,10 @@
   <a class="skip" href="#workspace">Skip to playground</a>
   <header class="topbar">
     <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">(•ω•)</span> faceroll<span class="version">playground</span></a>
-    <a class="source-link" href="https://github.com/rigerc/faceroll" target="_blank" rel="noreferrer">GitHub <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+    <div class="header-actions">
+      <label class="theme-control"><span>Theme</span><select id="theme" disabled><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+      <a class="source-link" aria-label="GitHub" href="https://github.com/rigerc/faceroll" target="_blank" rel="noreferrer"><span>GitHub</span> <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+    </div>
   </header>
   <main>
     <section class="intro" aria-labelledby="title">

@@ -253,11 +253,10 @@ async function copy(text, success) {
     const area = document.createElement("textarea");
     area.value = text;
     area.setAttribute("aria-label", "Text to copy");
-    area.style.cssText = "position:fixed;inset:25% 10%;width:80%;height:40%;z-index:20;background:white;color:#263126;padding:20px";
+    area.className = "manual-copy";
     const close = document.createElement("button");
     close.textContent = "Done";
-    close.className = "dark-button";
-    close.style.cssText = "position:fixed;top:68%;left:10%;z-index:21";
+    close.className = "dark-button manual-copy-close";
     const previousFocus = document.activeElement;
     const dismiss = () => { area.remove(); close.remove(); previousFocus?.focus(); };
     close.addEventListener("click", dismiss);

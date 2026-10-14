@@ -25,6 +25,12 @@ preference is enabled. Hidden pages suspend playback and cycling until visible a
 
 TypeScript 5.x is required (tsup's declaration bundler doesn't support TS 7 yet).
 
+The playground's **Theme** selector defaults to **System** and follows changes to
+`prefers-color-scheme`. **Light** and **Dark** override the system preference and
+persist in localStorage separately from the character configuration. Theme setup
+runs before styles load so saved preferences apply on the first paint. Restricted
+storage still allows theme changes for the current page.
+
 ## Layout
 
 ```
