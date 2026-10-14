@@ -9,11 +9,13 @@ npm run typecheck # tsc --noEmit
 npm run build     # tsup: ESM + CJS + .d.ts + CLI
 npm run test:smoke       # node --test test/smoke.test.mjs (prebuilt dist)
 npm run build:fallback   # scripts/build-fallback.mjs — tsc when tsup is unavailable
+npm run playground      # build and serve the playground at http://127.0.0.1:4173
+npm run build:playground # standalone static output in playground-dist/
+npm run test:playground  # Node tests against the built playground
 ```
 
-Note: `npm test` also picks up `test/smoke.test.mjs`, which has no vitest suite
-and reports as a failed file under vitest — that file is meant for
-`npm run test:smoke`. The 38 vitest tests themselves pass.
+Vitest runs only `test/**/*.test.ts`. The `.mjs` smoke and playground suites
+use Node's test runner via their separate commands and require built output.
 
 TypeScript 5.x is required (tsup's declaration bundler doesn't support TS 7 yet).
 
@@ -38,6 +40,9 @@ test/
   faceroll.test.ts   38 vitest tests
   smoke.test.mjs     6 node --test checks against prebuilt dist
 examples/browser.html  designer demo (imports ../dist/index.js)
+playground/             framework-free frontend (imports its packaged lib/index.js)
+scripts/build-playground.mjs  copies frontend and library into playground-dist/
+scripts/serve-playground.mjs  local static server for playground-dist/
 scripts/build-fallback.mjs
 ```
 
