@@ -38,7 +38,7 @@
   renderFamilyPeek();
 
   const brand = $(".brand");
-  brand.innerHTML = '<img class="studio-brand-icon" src="./assets/faceroll-icon.svg" alt="" width="36" height="36"><span class="studio-wordmark">facer<span>roll</span></span><span class="version">PLAYGROUND</span>';
+  brand.innerHTML = '<img class="studio-brand-emoticon brand-for-light" src="./assets/faceroll-emoticon-color.svg" alt="" width="98" height="32"><img class="studio-brand-emoticon brand-for-dark" src="./assets/faceroll-emoticon-reversed.svg" alt="" width="98" height="32"><span class="studio-wordmark">facer<span>roll</span></span><span class="version">PLAYGROUND</span>';
 
   const nav = document.createElement("nav");
   nav.className = "studio-nav";
