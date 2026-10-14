@@ -153,7 +153,8 @@ test("preview server serves the built playground and rejects traversal and write
   });
   const page = await fetch(origin);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /Kaomoji playground/);
+  assert.match(await page.text(), /Faceroll — Character studio/);
+  assert.equal((await fetch(`${origin}/studio.css`)).status, 200);
   assert.match((await fetch(`${origin}/app.js`)).headers.get("content-type"), /javascript/);
   assert.equal((await fetch(`${origin}/lib/index.js`)).status, 200);
   assert.equal((await fetch(`${origin}/missing`)).status, 404);
