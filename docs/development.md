@@ -12,10 +12,20 @@ npm run build:fallback   # scripts/build-fallback.mjs — tsc when tsup is unava
 npm run playground      # build and serve the playground at http://127.0.0.1:4173
 npm run build:playground # standalone static output in playground-dist/
 npm run test:playground  # Node tests against the built playground
+npm --prefix mcp ci     # install the optional Node 24+ MCP package
+npm run build:mcp       # build the core library and template-based MCP server
+npm run test:mcp        # MCP protocol, HTTP and stdio integration tests
+npm run start:mcp       # serve MCP at http://127.0.0.1:3000/mcp
+npm run inspect:mcp     # build and open MCP Inspector with a stdio server
+npm run inspect:mcp:http # open Inspector against the running HTTP server
+npm run inspect:mcp:cli # build and list tools with Inspector CLI
+npm run inspect:mcp:http:cli # list tools on the running HTTP server
 ```
 
 Vitest runs only `test/**/*.test.ts`. The `.mjs` smoke and playground suites
 use Node's test runner via their separate commands and require built output.
+The optional `mcp/` package has its own dependencies, lockfile, Vite build and
+colocated Vitest tests. See its [server guide](../mcp/README.md).
 
 In the playground, **Cycle moods** plays one complete animation loop per mood
 and wraps through all nine moods at the selected speed. Pause also pauses cycling;

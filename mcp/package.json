@@ -1,0 +1,50 @@
+{
+  "name": "faceroll-mcp",
+  "version": "0.3.0",
+  "description": "MCP tools for faceroll animated ASCII characters",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "faceroll-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "prebuild": "npm run typecheck",
+    "build": "vite build",
+    "dev": "node --watch src/index.ts",
+    "start": "node dist/index.js",
+    "start:stdio": "node dist/index.js --stdio",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "pretest": "npm run build",
+    "inspect": "npx --yes @modelcontextprotocol/inspector@2.11.0 node dist/index.js --stdio",
+    "inspect:http": "npx --yes @modelcontextprotocol/inspector@2.11.0 --transport http --server-url http://127.0.0.1:3000/mcp",
+    "inspect:cli": "npx --yes @modelcontextprotocol/inspector@2.11.0 --cli node dist/index.js --stdio --method tools/list --format json",
+    "inspect:http:cli": "npx --yes @modelcontextprotocol/inspector@2.11.0 --cli --transport http --server-url http://127.0.0.1:3000/mcp --method tools/list --format json"
+  },
+  "peerDependencies": {
+    "faceroll": "^0.3.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/node": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.3.1",
+    "effect": "^3.22.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "^2.3.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.0.0",
+    "faceroll": "file:..",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}

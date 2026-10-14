@@ -6,4 +6,5 @@
 - [CLI](cli.md) — `roll`, `play`, `states`, `parts` commands and flags.
 - [Editor](editor.md) — the stateful `Faceroll` class: locks, reroll, undo.
 - [Integration](integration.md) — browser, terminal, Node export, system prompts.
+- [MCP server](../mcp/README.md) — template-based HTTP and stdio tools for agents.
 - [Development](development.md) — tests, builds, and project layout.

@@ -139,6 +139,33 @@ npx faceroll parts
 
 Lock parts with `--body`, `--eyes` and `--mouth`.
 
+## MCP server
+
+The optional [MCP server](mcp/README.md) lets agents browse presets, create and
+reroll characters, retrieve animation frames, and export system prompts,
+Markdown, JSON or Node.js source. It uses
+[nickytonline's TypeScript MCP template](https://github.com/nickytonline/mcp-typescript-template)
+and runs as a separate Node.js 24+ package; the core stays dependency-free.
+
+From a checkout, install and build it with:
+
+```sh
+npm ci
+npm --prefix mcp ci
+npm run build:mcp
+npm run start:mcp           # HTTP: http://127.0.0.1:3000/mcp
+```
+
+For clients that launch a local stdio server, use
+`node /absolute/path/to/faceroll/mcp/dist/index.js --stdio`.
+See the [server guide](mcp/README.md) for client configuration and tool inputs.
+
+Use `npm run inspect:mcp` to build and open MCP Inspector for the stdio server,
+or `npm run inspect:mcp:http` to inspect an already running HTTP server.
+For command-line checks, use `npm run inspect:mcp:cli` or
+`npm run inspect:mcp:http:cli`. See the [Inspector guide](mcp/README.md#test-with-mcp-inspector)
+for tool calls and custom ports.
+
 ## Framework components
 
 Optional ESM adapters are available for React 18+, Vue 3.3+, and native Web

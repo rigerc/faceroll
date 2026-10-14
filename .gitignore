@@ -2,3 +2,10 @@ node_modules
 dist
 *.tgz
 playground-dist
+.agents/
+.claude/
+.serena/
+.codex/
+.pi/
+.opencode/
+.impeccable/

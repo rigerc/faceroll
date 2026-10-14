@@ -75,7 +75,14 @@
     "test:smoke": "node --test test/smoke.test.mjs",
     "playground": "npm run build:playground && node scripts/serve-playground.mjs",
     "build:playground": "npm run build && node scripts/build-playground.mjs",
-    "test:playground": "node --test test/playground.test.mjs"
+    "test:playground": "node --test test/playground.test.mjs",
+    "build:mcp": "npm run build && npm --prefix mcp run build",
+    "test:mcp": "npm run build && npm --prefix mcp test",
+    "start:mcp": "npm --prefix mcp start",
+    "inspect:mcp": "npm run build:mcp && npm --prefix mcp run inspect --",
+    "inspect:mcp:http": "npm --prefix mcp run inspect:http --",
+    "inspect:mcp:cli": "npm run build:mcp && npm --prefix mcp run inspect:cli --",
+    "inspect:mcp:http:cli": "npm --prefix mcp run inspect:http:cli --"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
