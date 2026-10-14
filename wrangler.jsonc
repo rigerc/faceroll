@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "faceroll-playground",
+  "compatibility_date": "2026-10-14",
+  "workers_dev": true,
+  // Assets only: no `main` and no `binding`, because there is no Worker script.
+  "assets": {
+    "directory": "./playground-dist",
+    // Explicit because Workers, unlike Pages, never guesses. Without this, /missing returns
+    // the generic 404 body and playground/404.html is only reachable at its literal path.
+    "not_found_handling": "404-page"
+  }
+}

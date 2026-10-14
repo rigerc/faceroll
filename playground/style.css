@@ -699,6 +699,29 @@ h2 {
   font-size:13px
 }
 
+.notfound {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  padding:80px 0 90px
+}
+
+.notfound-face {
+  font-family:var(--face-font);
+  font-size:clamp(40px,8vw,72px);
+  line-height:1.7;
+  color:var(--stage-text);
+  margin:0 0 22px
+}
+
+.notfound-action {
+  width:auto;
+  margin:26px 0 0;
+  padding:11px 22px;
+  text-decoration:none
+}
+
 .export-section {
   padding:45px 0 35px
 }

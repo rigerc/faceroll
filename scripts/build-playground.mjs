@@ -10,7 +10,9 @@ await rm(output, { recursive: true, force: true });
 await cp(join(root, "playground"), output, { recursive: true });
 await mkdir(join(output, "lib"), { recursive: true });
 // Also works with the multi-module TypeScript fallback build.
-for (const file of libraryFiles.filter(file => file.endsWith(".js") || file.endsWith(".js.map"))) {
+// Only the ESM browser graph is published: source maps and the CLI are dead weight on a static site.
+const browserLibraryFiles = libraryFiles.filter(file => file.endsWith(".js") && file !== "cli.js");
+for (const file of browserLibraryFiles) {
   await cp(join(root, "dist", file), join(output, "lib", file));
 }
 console.log(`Playground built in ${output}`);

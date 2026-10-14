@@ -349,6 +349,31 @@ Set `PORT` or `HOST` to override the development server defaults. After building
 `playground/`; run `npm run test:playground` after building to check its model,
 packaging, and preview server.
 
+The built site also ships `404.html` and `_headers`. Cloudflare Pages and Workers
+static assets both read those natively: the 404 page keeps unmatched URLs on a
+real `404` status instead of falling back to the SPA shell, and `_headers` sets a
+strict `Content-Security-Policy`. Because the 404 page is served at whatever path
+was requested, its asset URLs are root-absolute while the rest of the site stays
+relative and subdirectory-friendly.
+
+#### Deploying
+
+The site deploys to Cloudflare Workers static assets via Wrangler:
+
+```sh
+npm run deploy:cloudflare       # build, then wrangler deploy
+npm run deploy:cloudflare:dry   # build, then wrangler deploy --dry-run
+npm run preview:cloudflare      # build, then wrangler dev on :8787
+```
+
+`wrangler.jsonc` configures it as an assets-only Worker: no `main`, no `binding`,
+and `not_found_handling: "404-page"` set explicitly because Workers never infers
+it the way Pages does. Wrangler is a dev dependency, so the CLI version is pinned
+by the lockfile rather than whatever is installed globally.
+
+Custom domains require the zone's nameservers to be managed by Cloudflare; a
+`workers.dev` subdomain works without one.
+
 ### Browser example
 
 Run `npm run build`, serve the **project root** over HTTP (not `file://`),

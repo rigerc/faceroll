@@ -115,6 +115,17 @@ test("packaged frontend module graph resolves without Node-only imports", async 
   assert.ok(seen.size >= 4);
 });
 
+test("static hosts keep a 404 page and header rules in the build output", async () => {
+  const root = new URL("../playground-dist/", import.meta.url);
+  const notFound = await readFile(new URL("404.html", root), "utf8");
+  // Without a top-level 404.html, Cloudflare Pages assumes an SPA and serves / with a 200 for
+  // every unmatched path. The page is served at the requested URL, so relative assets would break.
+  assert.doesNotMatch(notFound, /(?:href|src)="\.\//);
+  assert.match(notFound, /href="\/"/);
+  const headers = await readFile(new URL("_headers", root), "utf8");
+  assert.match(headers, /Content-Security-Policy:/);
+});
+
 test("preview server serves the built playground and rejects traversal and writes", async t => {
   const child = spawn(process.execPath, ["scripts/serve-playground.mjs"], {
     cwd: new URL("..", import.meta.url), env: { ...process.env, PORT: "0", HOST: "127.0.0.1" }, stdio: ["ignore", "pipe", "pipe"],

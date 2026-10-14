@@ -24,6 +24,7 @@
   });
   document.addEventListener("DOMContentLoaded", () => {
     const select = document.querySelector("#theme");
+    if (!select) return;
     select.disabled = false;
     select.value = preference;
     select.addEventListener("change", () => {

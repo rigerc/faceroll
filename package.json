@@ -76,6 +76,9 @@
     "playground": "npm run build:playground && node scripts/serve-playground.mjs",
     "build:playground": "npm run build && node scripts/build-playground.mjs",
     "test:playground": "node --test test/playground.test.mjs",
+    "preview:cloudflare": "npm run build:playground && wrangler dev",
+    "deploy:cloudflare": "npm run build:playground && wrangler deploy",
+    "deploy:cloudflare:dry": "npm run build:playground && wrangler deploy --dry-run",
     "build:mcp": "npm run build && npm --prefix mcp run build",
     "test:mcp": "npm run build && npm --prefix mcp test",
     "start:mcp": "npm --prefix mcp start",
@@ -88,7 +91,8 @@
     "@types/node": "^26.6.5",
     "tsup": "^8.5.1",
     "typescript": "5.9",
-    "vitest": "^5.0.4"
+    "vitest": "^5.0.4",
+    "wrangler": "^4.151.0"
   },
   "peerDependencies": {
     "react": ">=18",
