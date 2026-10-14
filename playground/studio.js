@@ -13,6 +13,30 @@
   workspace.prepend(editor);
   workspace.append(inspector);
 
+  // Desktop glimpse of the actual derived thread family, not illustrative faces.
+  const familyPeek = document.createElement("section");
+  familyPeek.className = "family-peek";
+  familyPeek.innerHTML = '<div class="family-peek-head"><strong>Thread family</strong><a href="#family-title">View family ↗</a></div><div class="family-peek-faces" aria-label="Related thread faces"></div>';
+  inspector.insertBefore(familyPeek, exportPanel);
+  const familyGrid = $("#family-children");
+  function renderFamilyPeek() {
+    const target = familyPeek.querySelector(".family-peek-faces");
+    const rows = Array.from(familyGrid.querySelectorAll(".family-card")).slice(0, 3);
+    target.replaceChildren(...rows.map(row => {
+      const tile = document.createElement("div");
+      tile.className = "family-peek-tile";
+      const face = document.createElement("span");
+      face.className = "family-peek-face";
+      face.textContent = row.querySelector(".family-face")?.textContent || "";
+      const name = document.createElement("small");
+      name.textContent = row.querySelector(".family-name")?.textContent || "";
+      tile.append(face, name);
+      return tile;
+    }));
+  }
+  new MutationObserver(renderFamilyPeek).observe(familyGrid, {childList:true});
+  renderFamilyPeek();
+
   const brand = $(".brand");
   brand.innerHTML = '<img class="studio-brand-icon" src="./assets/faceroll-icon.svg" alt="" width="36" height="36"><span class="studio-wordmark">facer<span>roll</span></span><span class="version">PLAYGROUND</span>';
 
