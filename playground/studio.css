@@ -257,3 +257,12 @@ footer{max-width:none;background:var(--surface);padding:22px 30px}
 :root[data-theme="dark"] .brand-for-light{display:none}
 :root[data-theme="dark"] .brand-for-dark{display:block}
 @media(max-width:760px){.studio-brand-emoticon{width:77px;height:29px}}
+
+/* Small-screen hardening: preserve accessible theme label and long face frames. */
+@media(max-width:760px){
+  .theme-control>span{display:block;position:absolute;width:1px;height:1px;
+    overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .preview-panel .face-wrap{overflow-x:auto;overflow-y:hidden}
+  .preview-panel .face{font-size:clamp(22px,6.5vw,36px)}
+  .inspector-panel .export-section{padding:14px 17px 74px}
+}
