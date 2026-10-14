@@ -45,6 +45,45 @@ import { createCharacter } from "faceroll";
 const same = createCharacter(pixel.parts, { name: "Pixel" });
 ```
 
+## Parent / child faces for project threads
+
+One project face can have a family of related thread faces. Each child keeps
+the project's body while changing its eyes and/or mouth. Variations prefer a
+single part change first, and each child retains all nine animations.
+
+```ts
+import { rollCharacter, deriveChildCharacter, deriveChildCharacters } from "faceroll";
+
+const project = rollCharacter({ seed: "my-project" });
+const previews = deriveChildCharacters(project, { count: 5, seed: "my-project" });
+
+// Assign a zero-based slot once and persist it with your thread metadata.
+const thread = deriveChildCharacter(project, { index: 2, seed: "my-project" });
+thread.animations.working.still;
+```
+
+The same parent **parts**, family seed and slot always produce the same child.
+Adding threads does not change the faces at existing slots. Persist the parent's
+parts, family seed and each thread's allocated slot; Faceroll intentionally does
+not manage project or thread storage. Child names default to unique automatic
+names, or pass `name` to `deriveChildCharacter` for a custom name. An omitted
+family seed also produces a deterministic order for the same parent parts.
+
+Siblings are distinct by their **rendered idle face**, even for bear bodies
+whose mouths look identical. With the current parts catalog there are 239
+possible children for other bodies, or 15 for a bear body. Requests exceeding
+capacity throw `RangeError`; `childCapacity(parent)` returns the limit.
+Children do not claim a standalone roll seed; regenerate them through the
+family API.
+
+```sh
+faceroll children --preset kitty --seed my-project --count 5
+faceroll children --preset kitty --seed my-project --index 2 --format json
+```
+
+The MCP server also exposes `derive_child` and `derive_children`, and the
+playground has an interactive **Thread family** gallery.
+
 ## More faces and ready-made presets
 
 Faceroll v0.3.0 includes **27 bodies, 16 eye styles, and 15 mouths**: 6,480 possible
@@ -133,6 +172,7 @@ It redraws one line with `\r` and hides the cursor while it runs. On a non-TTY s
 npx faceroll roll --vibe cute --name Pixel
 npx faceroll roll --seed pixel --format prompt     # also: markdown, json, node, text
 npx faceroll play working --seed pixel --duration 3000
+npx faceroll children --preset kitty --count 5 --seed project
 npx faceroll states
 npx faceroll parts
 ```
@@ -223,6 +263,9 @@ See [framework integration documentation](docs/frameworks.md).
 | `rollCharacter(options?)` | Roll a character. Options: `seed`, `rng`, `vibe`, `lock`, `name`. |
 | `createCharacter(parts, options?)` | Build from exact parts. Throws `RangeError` on an unknown id. |
 | `rerollPart(character, kind, options?)` | New body, eyes or mouth, keeping the rest. |
+| `deriveChildCharacter(parent, { index, seed?, name? })` | Generate a stable variation for one thread slot. |
+| `deriveChildCharacters(parent, { count, seed? })` | Generate distinct siblings for slots 0 through count − 1. |
+| `childCapacity(parent)` | Maximum visually distinct children within the parent body. |
 | `listParts()` | Every valid id for `body`, `eyes` and `mouth`. |
 | `partPool(kind, vibe?)` | Ids that fit a vibe. |
 
