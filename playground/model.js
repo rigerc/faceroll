@@ -1,4 +1,4 @@
-import { createFaceroll, BODIES, EYES, MOUTHS } from "./lib/index.js";
+import { createFaceroll, BODIES, EYES, MOUTHS, nameForParts } from "./lib/index.js";
 
 export const STORAGE_KEY = "faceroll:playground:v1";
 export const TABLES = { body: BODIES, eyes: EYES, mouth: MOUTHS };
@@ -11,8 +11,9 @@ export function restoreEditor(storage) {
         !["any", "cute", "cool", "weird"].includes(saved.vibe) ||
         !Object.keys(TABLES).every(kind => TABLES[kind].some(part => part.id === saved.parts?.[kind]) &&
           typeof saved.locks?.[kind] === "boolean")) throw new Error("Invalid saved character");
-    return createFaceroll({ name: saved.name, vibe: saved.vibe, parts: saved.parts, locks: saved.locks });
-  } catch { return createFaceroll({ name: "Pixel" }); }
+    if (saved.nameMode !== undefined && !["auto", "custom"].includes(saved.nameMode)) throw new Error("Invalid name mode");
+    return createFaceroll({ name: saved.name, nameMode: saved.nameMode, vibe: saved.vibe, parts: saved.parts, locks: saved.locks });
+  } catch { return createFaceroll(); }
 }
 
 /** UI history includes explicit part choices as well as rolls and presets. */
@@ -35,10 +36,11 @@ export function createHistory(editor) {
 export function filterPresets(presets, vibe, query) {
   const term = query.trim().toLowerCase();
   return presets.filter(preset => (vibe === "any" || preset.vibe === vibe) &&
-    `${preset.label} ${preset.id} ${preset.vibe}`.toLowerCase().includes(term));
+    `${nameForParts(preset.parts)} ${preset.label} ${preset.id} ${preset.vibe}`.toLowerCase().includes(term));
 }
 
 export function exportFilename(name, format) {
   const stem = name.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "character";
   return `${stem}.${{ prompt: "txt", json: "json", markdown: "md", node: "cjs" }[format]}`;
 }
+

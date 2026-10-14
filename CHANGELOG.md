@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Assign distinct, stable human names to all 6,480 face configurations by default.
+- Preserve automatic/custom naming mode in editor configs, JSON and MCP snapshots.
+- Follow part changes and undo with automatic names; preserve custom and legacy names.
+- Use automatic names in the playground, browser example, CLI and Web Component.
+
+
+## Unreleased
+
 - Added optional ESM React, Vue 3 and native Web Component adapters.
 - Exposed dedicated package subpaths with TypeScript declarations and optional
   React/Vue peer dependencies.
@@ -46,3 +54,4 @@
 
 - Deterministic character generation, nine animations, ESM/CommonJS,
   terminal playback, CLI, prompt/Markdown/JSON exports and type definitions.
+

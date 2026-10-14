@@ -5,6 +5,7 @@ import { type StateName } from "./states";
 import { frameAt } from "./player";
 import { getFacePreset } from "./presets";
 import { serialize, toMarkdown, toNodeSource, toSystemPrompt } from "./export";
+import type { NameMode } from "./names";
 import type { Vibe } from "./types";
 
 export type PartLocks = Record<PartKind, boolean>;
@@ -12,6 +13,7 @@ export type ExportFormat = "prompt" | "markdown" | "json" | "node";
 
 export interface FacerollOptions {
   name?: string;
+  nameMode?: NameMode;
   vibe?: Vibe;
   parts?: Partial<Parts>;
   locks?: Partial<PartLocks>;
@@ -27,6 +29,7 @@ export interface FacerollOptions {
 
 export interface FacerollConfig {
   name: string;
+  nameMode?: NameMode;
   vibe: Vibe;
   parts: Parts;
   locks: PartLocks;
@@ -50,7 +53,7 @@ function validVibe(vibe: Vibe): void {
  * No DOM, storage, or timer dependencies.
  */
 export class Faceroll {
-  private name: string;
+  private name: string | undefined;
   private vibe: Vibe;
   private parts: Parts;
   private locks: PartLocks;
@@ -60,7 +63,7 @@ export class Faceroll {
   private readonly history: Parts[] = [];
 
   constructor(options: FacerollOptions = {}) {
-    this.name = options.name ?? "Agent";
+    this.name = options.nameMode === "auto" ? undefined : options.name?.trim() || undefined;
     this.vibe = options.vibe ?? "any";
     validVibe(this.vibe);
     this.parts = { ...DEFAULT_PARTS, ...options.parts };
@@ -70,11 +73,11 @@ export class Faceroll {
     }
     this.historyLimit = options.historyLimit ?? 30;
     this.rng = options.rng ?? options.random ?? (options.seed !== undefined ? seededRng(options.seed) : Math.random);
-    this.character = createCharacter(this.parts, { name: this.name });
+    this.character = createCharacter(this.parts, this.name !== undefined ? { name: this.name } : {});
   }
 
   getConfig(): FacerollConfig {
-    return { name: this.name, vibe: this.vibe, parts: { ...this.parts }, locks: { ...this.locks } };
+    return { name: this.character.name, nameMode: this.character.nameMode ?? "custom", vibe: this.vibe, parts: { ...this.parts }, locks: { ...this.locks } };
   }
 
   /** Immutable snapshot suitable for existing `faceroll` APIs. */
@@ -83,8 +86,9 @@ export class Faceroll {
   getLocks(): PartLocks { return { ...this.locks }; }
   get historyLength(): number { return this.history.length; }
 
+  /** Set a custom name; blank text restores automatic naming. */
   setName(name: string): void {
-    this.name = name;
+    this.name = name.trim() || undefined;
     this.refresh();
   }
 
@@ -134,7 +138,7 @@ export class Faceroll {
   /** Explicitly set selected parts, even if locked or outside the current vibe. */
   setParts(changes: Partial<Parts>): void {
     const next = { ...this.parts, ...changes };
-    const candidate = createCharacter(next, { name: this.name });
+    const candidate = createCharacter(next, this.name !== undefined ? { name: this.name } : {});
     this.parts = next;
     this.character = candidate;
   }
@@ -178,7 +182,7 @@ export class Faceroll {
   }
 
   private commit(next: Parts): void {
-    const candidate = createCharacter(next, { name: this.name });
+    const candidate = createCharacter(next, this.name !== undefined ? { name: this.name } : {});
     if (this.historyLimit > 0) {
       this.history.push({ ...this.parts });
       if (this.history.length > this.historyLimit) this.history.shift();
@@ -188,7 +192,7 @@ export class Faceroll {
   }
 
   private refresh(): void {
-    this.character = createCharacter(this.parts, { name: this.name });
+    this.character = createCharacter(this.parts, this.name !== undefined ? { name: this.name } : {});
   }
 }
 
@@ -196,3 +200,4 @@ export class Faceroll {
 export function createFaceroll(options: FacerollOptions = {}): Faceroll {
   return new Faceroll(options);
 }
+

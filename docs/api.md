@@ -11,7 +11,7 @@ import { rollCharacter, createCharacter, rerollPart, listParts } from "faceroll"
 
 | Function | Signature | Behavior |
 |---|---|---|
-| `rollCharacter` | `(options?: RollOptions) => Character` | Random roll. `seed` (string\|number) reproduces the character; omit for a random 6-char base-36 seed stored on the result. `rng` replaces the seed (then no `seed` is recorded). `vibe` filters the pools (`"any"` default). `lock` keeps named parts fixed. `name` defaults to `"Agent"`. |
+| `rollCharacter` | `(options?: RollOptions) => Character` | Random roll. `seed` (string\|number) reproduces the character; omit for a random 6-char base-36 seed stored on the result. `rng` replaces the seed (then no `seed` is recorded). `vibe` filters the pools (`"any"` default). `lock` keeps named parts fixed. `name` defaults to the unique automatic name for the selected parts; a nonblank custom name overrides it. |
 | `createCharacter` | `(parts: Parts, options?: CreateOptions) => Character` | Build from exact ids. Throws `RangeError` on unknown body/eyes/mouth. Bear bodies render the fixed `ᴥ` mouth but keep your `parts.mouth` preference, restored when the body changes. |
 | `rerollPart` | `(character: Character, kind: PartKind, options?: RerollOptions) => Character` | New value for one part, never repeating the current one when the pool has an alternative. Returns a new `Character` (new random seed unless `seed`/`rng` given). |
 | `listParts` | `() => { body: BodyId[]; eyes: EyesId[]; mouth: MouthId[] }` | Every valid id per kind. |
@@ -19,15 +19,16 @@ import { rollCharacter, createCharacter, rerollPart, listParts } from "faceroll"
 ```ts
 interface Character {
   readonly name: string;
+  readonly nameMode?: "auto" | "custom";
   readonly seed?: string;
   readonly parts: Readonly<Parts>;          // { body, eyes, mouth }
   readonly animations: Readonly<Record<StateName, Animation>>;
 }
 interface RollOptions {
   seed?: string | number; rng?: Rng; vibe?: Vibe;
-  lock?: Partial<Parts>; name?: string;
+  lock?: Partial<Parts>; name?: string; nameMode?: "auto" | "custom";
 }
-interface CreateOptions { name?: string; seed?: string; }
+interface CreateOptions { name?: string; nameMode?: "auto" | "custom"; seed?: string; }
 interface RerollOptions { seed?: string | number; rng?: Rng; vibe?: Vibe; }
 ```
 
@@ -101,8 +102,8 @@ import { toSystemPrompt, toMarkdown, serialize, deserialize, toNodeSource } from
 |---|---|
 | `toSystemPrompt(character, { states }?)` | Prompt text: name, States/Emotions sections (`- Label (use): face`), one-face-per-message rule, never-in-code rule. |
 | `toMarkdown(character)` | `### Name` + table of State \| Face \| Use when. |
-| `serialize(character)` | Plain JSON-safe data: `{ name, seed?, parts, animations }`; frames as `[text, ms]` pairs. |
-| `deserialize(data)` | Rebuilds via `createCharacter` (animations regenerated from parts; needs `name` + `parts`, optional `seed`). |
+| `serialize(character)` | Plain JSON-safe data: `{ name, nameMode?, seed?, parts, animations }`; frames as `[text, ms]` pairs. |
+| `deserialize(data)` | Rebuilds via `createCharacter` (animations regenerated from parts; needs `name` + `parts`, optional `seed` and `nameMode`). |
 | `toNodeSource(character)` | Standalone dependency-free Node source defining `play(state, stream?)` over the nine animations. |
 
 ## Utilities
@@ -111,3 +112,12 @@ import { toSystemPrompt, toMarkdown, serialize, deserialize, toNodeSource } from
 - `seededRng(seed): Rng` — mulberry32 generator.
 - `cellWidth(text: string): number` — terminal columns; East Asian wide/fullwidth = 2, combining marks = 0, everything else = 1 (`src/width.ts`). Estimate only; fonts decide real width.
 - Types from `./types`: `Vibe` (`"any" | "cute" | "cool" | "weird"`), `VibeTag`, `Look` (`"c" | "l" | "r"`), `Pair`, `EyeExpression`, `MouthExpression`, `BodyDef`, `EyeDef`, `MouthDef`, `Frame`, `StateInfo`.
+
+
+## Automatic identity
+
+`nameForParts(parts)` returns a stable first name and surname, unique across the
+6,480 supported part configurations. It uses no randomness. Automatic names follow
+part rerolls; custom names remain fixed. `nameMode: "auto"` restores automatic
+naming even if a saved name is supplied. A blank name also selects automatic naming.
+Legacy snapshots with a nonblank name and no mode are treated as custom.

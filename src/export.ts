@@ -1,5 +1,6 @@
 import type { Character } from "./character";
 import { createCharacter } from "./character";
+import type { NameMode } from "./names";
 import type { Parts } from "./parts";
 import { STATES, type StateName } from "./states";
 
@@ -38,6 +39,7 @@ export function toMarkdown(character: Character): string {
 /** Plain data that survives `JSON.stringify`. Frames are `[text, ms]` pairs. */
 export interface SerializedCharacter {
   name: string;
+  nameMode?: NameMode;
   seed?: string;
   parts: Parts;
   animations: Record<StateName, { still: string; frames: [text: string, ms: number][] }>;
@@ -51,6 +53,7 @@ export function serialize(character: Character): SerializedCharacter {
   }
   return {
     name: character.name,
+    ...(character.nameMode !== undefined ? { nameMode: character.nameMode } : {}),
     ...(character.seed !== undefined ? { seed: character.seed } : {}),
     parts: { ...character.parts },
     animations,
@@ -58,9 +61,10 @@ export function serialize(character: Character): SerializedCharacter {
 }
 
 /** Rebuild a character from `serialize` output. Animations are regenerated from the parts. */
-export function deserialize(data: Pick<SerializedCharacter, "name" | "parts"> & { seed?: string }): Character {
+export function deserialize(data: Pick<SerializedCharacter, "name" | "nameMode" | "parts"> & { seed?: string }): Character {
   return createCharacter(data.parts, {
     name: data.name,
+    ...(data.nameMode !== undefined ? { nameMode: data.nameMode } : {}),
     ...(data.seed !== undefined ? { seed: data.seed } : {}),
   });
 }
@@ -103,3 +107,4 @@ export function toNodeSource(character: Character): string {
     '// Example: const stop = play("working");',
   ].join("\n");
 }
+

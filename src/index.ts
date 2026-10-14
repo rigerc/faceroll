@@ -40,3 +40,7 @@ export { hashSeed, seededRng } from "./rng";
 export type { Rng } from "./rng";
 
 export { cellWidth } from "./width";
+
+
+export { nameForParts } from "./names";
+export type { NameMode } from "./names";

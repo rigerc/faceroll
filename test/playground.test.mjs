@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { createFaceroll, FACE_PRESETS } from "../dist/index.js";
+import { createFaceroll, FACE_PRESETS, nameForParts } from "../dist/index.js";
 import { restoreEditor, createHistory, filterPresets, exportFilename } from "../playground-dist/model.js";
 
 test("restores valid configuration and recovers from corrupt or inaccessible storage", () => {
@@ -11,10 +11,28 @@ test("restores valid configuration and recovers from corrupt or inaccessible sto
   const storage = value => ({ getItem: () => value });
   assert.deepEqual(restoreEditor(storage(JSON.stringify(config))).getConfig(), config);
   for (const value of ["{bad", "null", JSON.stringify({ ...config, name: {} }), JSON.stringify({ ...config, locks: {} }), JSON.stringify({ ...config, parts: { ...config.parts, eyes: "invalid" } })]) {
-    assert.equal(restoreEditor(storage(value)).getConfig().name, "Pixel");
+    assert.deepEqual(restoreEditor(storage(value)).getConfig(), createFaceroll().getConfig());
   }
-  assert.equal(restoreEditor({ getItem() { throw new Error("blocked"); } }).getConfig().name, "Pixel");
-  assert.equal(restoreEditor(undefined).getConfig().name, "Pixel");
+  assert.deepEqual(restoreEditor({ getItem() { throw new Error("blocked"); } }).getConfig(), createFaceroll().getConfig());
+  assert.deepEqual(restoreEditor(undefined).getConfig(), createFaceroll().getConfig());
+});
+
+test("automatic names survive storage and UI history while legacy names stay custom", () => {
+  const initial = createFaceroll().getConfig();
+  const editor = restoreEditor({ getItem: () => JSON.stringify(initial) });
+  const history = createHistory(editor);
+  history.change(() => editor.setParts({ body: "bot" }));
+  assert.equal(editor.getConfig().name, nameForParts(editor.getParts()));
+  assert.notEqual(editor.getConfig().name, initial.name);
+  history.undo();
+  assert.deepEqual(editor.getConfig(), initial);
+  const { nameMode, ...legacy } = initial;
+  legacy.name = "Pixel";
+  const old = restoreEditor({ getItem: () => JSON.stringify(legacy) });
+  old.setParts({ body: "bot" });
+  assert.equal(old.getConfig().name, "Pixel");
+  assert.equal(old.getConfig().nameMode, "custom");
+  assert.equal(restoreEditor({ getItem: () => JSON.stringify({ ...initial, nameMode: "invalid" }) }).getConfig().nameMode, "auto");
 });
 
 test("undo restores manual edits, presets and rolls while retaining locks and name", () => {
@@ -62,6 +80,16 @@ test("preset search combines style and normalized text and permits empty results
   assert.deepEqual(filterPresets(FACE_PRESETS, "cute", " BUNNY ").map(preset => preset.id), ["bunny"]);
   assert.equal(filterPresets(FACE_PRESETS, "cool", "bunny").length, 0);
   assert.ok(filterPresets(FACE_PRESETS, "weird", "weird").every(preset => preset.vibe === "weird"));
+});
+
+test("preset search finds generated first names and surnames alongside preset labels", () => {
+  const classic = FACE_PRESETS.find(preset => preset.id === "classic");
+  const name = nameForParts(classic.parts);
+  assert.deepEqual(filterPresets(FACE_PRESETS, "any", ` ${name.toUpperCase()} `).map(preset => preset.id), ["classic"]);
+  for (const word of name.split(" ")) {
+    assert.ok(filterPresets(FACE_PRESETS, "cute", word).some(preset => preset.id === "classic"));
+  }
+  assert.equal(filterPresets(FACE_PRESETS, "cool", name).length, 0);
 });
 
 test("download names are safe and match export content", () => {
@@ -114,3 +142,4 @@ test("preview server serves the built playground and rejects traversal and write
   assert.equal(head.status, 200);
   assert.equal(await head.text(), "");
 });
+

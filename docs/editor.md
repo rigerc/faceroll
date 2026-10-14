@@ -18,7 +18,8 @@ editor.export("json");  // "prompt" | "markdown" | "json" | "node"
 
 | Option | Default | Meaning |
 |---|---|---|
-| `name` | `"Agent"` | Character name |
+| `name` | automatic | Custom character name; blank restores automatic naming |
+| `nameMode` | inferred from `name` | `"auto"` follows parts; `"custom"` keeps a nonblank name. Pass saved mode when restoring. |
 | `vibe` | `"any"` | Pool filter; validated, `RangeError` on unknown |
 | `parts` | `{ body: "round", eyes: "dot", mouth: "w" }` | Starting selection |
 | `locks` | all `false` | Per-part locks |
@@ -36,10 +37,10 @@ editor.export("json");  // "prompt" | "markdown" | "json" | "node"
 | `undo()` | `boolean` | Pop the last snapshot. Locks and vibe are unchanged. `false` when history is empty. |
 | `setParts(changes)` | `void` | Explicitly set ids — allowed even if locked or outside the vibe. Throws `RangeError` on unknown ids (via `createCharacter`). Bear mouth-preservation applies. |
 | `setLocked(kind, locked)` / `isLocked(kind)` | `void` / `boolean` | Per-part locks; unknown kinds throw. |
-| `setName(name)` | `void` | Rename (rebuilds the snapshot). |
+| `setName(name)` | `void` | Set a custom name; clear to use the automatic name for current parts. |
 | `setVibe(vibe, reroll = true)` | `boolean` | Change vibe; by default rerolls unlocked parts (returns its result). Pass `false` to keep parts. |
 | `getParts()` / `getLocks()` | copies | Current selection / locks (safe to mutate the result). |
-| `getConfig()` | `FacerollConfig` | Plain `{ name, vibe, parts, locks }` — save to `localStorage`, restore via the constructor. |
+| `getConfig()` | `FacerollConfig` | Plain `{ name, nameMode, vibe, parts, locks }` — save to `localStorage`, restore via the constructor. |
 | `getCharacter()` | `Character` | Immutable snapshot for the other APIs. |
 | `getAnimations()` / `getAnimation(state)` | animations | Direct access to the snapshot's animations. |
 | `getStill(state)` | `string` | Static face. |
@@ -50,5 +51,6 @@ editor.export("json");  // "prompt" | "markdown" | "json" | "node"
 ## Notes
 
 - A custom `rng` must return a finite number in `[0, 1)`; anything else throws `RangeError`.
-- `commit` pushes the *previous* parts onto a bounded stack (drops the oldest past the limit). `undo` restores without touching locks, vibe, or name.
+- `commit` pushes the *previous* parts onto a bounded stack (drops the oldest past the limit). `undo` restores parts and their automatic name without changing locks, vibe, or a custom name.
 - The bundled `examples/browser.html` wires all of this to a UI: state/vibe selectors, roll, undo, per-part reroll, locks, animated preview, export chooser, `localStorage` persistence, reduced-motion support.
+

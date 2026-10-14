@@ -114,20 +114,22 @@ function renderGallery() {
     button.className = "preset";
     button.type = "button";
     button.setAttribute("aria-pressed", String(Object.keys(TABLES).every(kind => parts[kind] === preset.parts[kind])));
+    const character = createPresetCharacter(preset.id);
+    button.setAttribute("aria-label", `${character.name}, ${preset.label}, ${preset.vibe}`);
     const face = document.createElement("span");
     face.className = "preset-face";
-    face.textContent = createPresetCharacter(preset.id).animations.idle.still;
+    face.textContent = character.animations.idle.still;
     const name = document.createElement("span");
     name.className = "preset-name";
-    name.textContent = preset.label;
+    name.textContent = character.name;
     const vibe = document.createElement("span");
     vibe.className = "preset-vibe";
-    vibe.textContent = preset.vibe;
+    vibe.textContent = `${preset.label} · ${preset.vibe}`;
     button.append(face, name, vibe);
     button.addEventListener("click", () => {
       history.change(() => editor.applyPreset(preset.id));
       refresh();
-      notify(`${preset.label} selected`);
+      notify(`${editor.getConfig().name} selected`);
     });
     return button;
   }));
@@ -136,7 +138,13 @@ function renderGallery() {
 function renderExport() { $("#output").textContent = editor.export(format); }
 function renderControls() {
   const config = editor.getConfig();
-  $("#name").value = config.name;
+  if (document.activeElement !== $("#name")) $("#name").value = config.name;
+  const automatic = config.nameMode === "auto";
+  $("#name-mode").textContent = automatic ? "Automatic" : "Custom";
+  $("#auto-name").disabled = automatic;
+  $("#name-hint").textContent = automatic
+    ? "This name follows the face. Type your own to keep it."
+    : "Your name stays when the face changes.";
   $("#vibe").value = config.vibe;
   $("#character-caption").textContent = config.name || "Unnamed character";
   $("#undo").disabled = history.length === 0;
@@ -217,8 +225,17 @@ $("#name").addEventListener("input", event => {
   editor.setName(event.target.value);
   renderControls();
   renderExport();
-  $("#face").setAttribute("aria-label", `${event.target.value || "Character"}, ${state} expression`);
+  $("#face").setAttribute("aria-label", `${editor.getConfig().name}, ${state} expression`);
   persist();
+});
+$("#name").addEventListener("blur", renderControls);
+$("#auto-name").addEventListener("click", () => {
+  editor.setName("");
+  renderControls();
+  renderExport();
+  $("#face").setAttribute("aria-label", `${editor.getConfig().name}, ${state} expression`);
+  persist();
+  notify(`Automatic name: ${editor.getConfig().name}`);
 });
 $("#vibe").addEventListener("change", event => { history.change(() => editor.setVibe(event.target.value)); refresh(); });
 $("#play").addEventListener("click", () => { playing = !playing; startPlayback(); });
@@ -295,3 +312,4 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("pagehide", stopPlayback);
 refresh();
+

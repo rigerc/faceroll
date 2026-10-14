@@ -15,7 +15,7 @@ faceroll parts                     List body, eyes and mouth ids
 |---|---|---|---|
 | `--seed <text>` | roll, play | random | Same seed → same character |
 | `--vibe <any\|cute\|cool\|weird>` | roll, play | `any` | Restrict the part pools |
-| `--name <text>` | roll, play | `Agent` | Character name |
+| `--name <text>` | roll, play | automatic | Custom character name |
 | `--body <id>` | roll, play | — | Lock body (see `parts`) |
 | `--eyes <id>` | roll, play | — | Lock eyes |
 | `--mouth <id>` | roll, play | — | Lock mouth |
@@ -64,3 +64,7 @@ faceroll roll --preset hacker --format json   # export a fixed preset
 A preset selects fixed parts. Explicit `--body`, `--eyes`, and `--mouth`
 flags take precedence. Without a preset, rolls continue to obey seed, vibe,
 and locked part options.
+
+
+Omit `--name` for a stable, unique human name per part configuration. Use
+`--name Pixel` to override it; a blank name uses automatic naming.

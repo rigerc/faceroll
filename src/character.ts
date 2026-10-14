@@ -2,11 +2,14 @@ import { buildAnimations, type Animation } from "./build";
 import { BODIES, EYES, MOUTHS, PART_KINDS, getBody, getEyes, getMouth, partPool, type Parts, type PartKind } from "./parts";
 import { pick, randomSeed, seededRng, type Rng } from "./rng";
 import type { StateName } from "./states";
+import { nameForParts, type NameMode } from "./names";
 import type { Vibe } from "./types";
 
 /** A complete agent face: its parts and one animation per state. */
 export interface Character {
   readonly name: string;
+  /** Omitted on legacy snapshots, whose names are treated as custom. */
+  readonly nameMode?: NameMode;
   /** The seed that produced this character, if it was rolled with one. */
   readonly seed?: string;
   readonly parts: Readonly<Parts>;
@@ -15,6 +18,7 @@ export interface Character {
 
 export interface CreateOptions {
   name?: string;
+  nameMode?: NameMode;
   seed?: string;
 }
 
@@ -27,6 +31,7 @@ export interface RollOptions {
   /** Parts to keep fixed. Everything else is rolled. */
   lock?: Partial<Parts>;
   name?: string;
+  nameMode?: NameMode;
 }
 
 export interface RerollOptions {
@@ -34,8 +39,6 @@ export interface RerollOptions {
   rng?: Rng;
   vibe?: Vibe;
 }
-
-const DEFAULT_NAME = "Agent";
 
 /**
  * Build a character from exact parts. Throws `RangeError` on an unknown id.
@@ -49,8 +52,11 @@ export function createCharacter(parts: Parts, options: CreateOptions = {}): Char
   // Store the preferred mouth even when the current body renders a fixed mouth.
   // Switching away from a bear restores the original selection.
   const normalized: Parts = { ...parts };
+  const customName = options.name?.trim();
+  const nameMode = options.nameMode === "auto" || !customName ? "auto" : "custom";
   const character: Character = {
-    name: options.name?.trim() || DEFAULT_NAME,
+    name: nameMode === "auto" ? nameForParts(normalized) : customName as string,
+    nameMode,
     ...(options.seed !== undefined ? { seed: options.seed } : {}),
     parts: Object.freeze(normalized),
     animations: Object.freeze(buildAnimations(normalized)),
@@ -72,6 +78,7 @@ export function rollCharacter(options: RollOptions = {}): Character {
   };
   return createCharacter(parts, {
     ...(options.name !== undefined ? { name: options.name } : {}),
+    ...(options.nameMode !== undefined ? { nameMode: options.nameMode } : {}),
     ...(seed !== undefined ? { seed } : {}),
   });
 }
@@ -86,6 +93,7 @@ export function rerollPart(character: Character, kind: PartKind, options: Reroll
   const next = pick(others.length > 0 ? others : pool, rng);
   return createCharacter({ ...character.parts, [kind]: next } as Parts, {
     name: character.name,
+    nameMode: character.nameMode ?? "custom",
     ...(seed !== undefined ? { seed } : {}),
   });
 }
@@ -100,3 +108,4 @@ export function listParts(): { [K in PartKind]: Parts[K][] } {
 }
 
 export { PART_KINDS };
+

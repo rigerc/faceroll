@@ -77,7 +77,7 @@ export function defineFacerollElement(tagName = DEFAULT_FACE_TAG) {
       this._stop();
       const character = this._character ?? createPresetCharacter(
         this.getAttribute("preset") ?? "classic",
-        { name: this.getAttribute("name") ?? "Agent" },
+        { name: this.getAttribute("name") ?? undefined },
       );
       const state = this.state;
       const animation = character.animations[state];
@@ -99,3 +99,4 @@ export function defineFacerollElement(tagName = DEFAULT_FACE_TAG) {
   customElements.define(tagName, FacerollFaceElement);
   return true;
 }
+

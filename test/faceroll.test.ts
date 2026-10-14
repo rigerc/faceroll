@@ -84,7 +84,7 @@ describe("rollCharacter", () => {
 
   it("names the character", () => {
     expect(rollCharacter({ seed: 1, name: "  Pixel " }).name).toBe("Pixel");
-    expect(rollCharacter({ seed: 1 }).name).toBe("Agent");
+    expect(rollCharacter({ seed: 1 }).nameMode).toBe("auto");
   });
 });
 
@@ -502,3 +502,4 @@ describe("expanded faces and presets", () => {
     expect(editor.getParts()).toEqual({ body: "round", eyes: "dot", mouth: "w" });
   });
 });
+

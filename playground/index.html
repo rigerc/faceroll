@@ -22,18 +22,19 @@
   </header>
   <main>
     <section class="intro" aria-labelledby="title">
-      <div><h1 id="title">Kaomoji playground</h1><p class="subtitle">Choose a face, edit its parts, and preview each expression.</p></div>
+      <div><h1 id="title">Kaomoji playground</h1><p class="subtitle">Meet a named face, edit its parts, and preview each expression.</p></div>
     </section>
     <section id="workspace" class="workspace" aria-label="Character playground">
       <div class="preview-panel">
         <div class="panel-bar"><h2>Preview</h2><span id="motion-status" class="badge">Animating</span></div>
-        <div class="stage"><div class="stage-caption" id="character-caption">Pixel</div><div class="face-wrap"><span id="face" class="face" role="img" aria-label="Character preview"></span></div><p class="state-say"><span class="sample-label">Example:</span> <span id="state-say"></span></p><button id="copy-face" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy face</button></div>
+        <div class="stage"><div class="stage-caption" id="character-caption">Character</div><div class="face-wrap"><span id="face" class="face" role="img" aria-label="Character preview"></span></div><p class="state-say"><span class="sample-label">Example:</span> <span id="state-say"></span></p><button id="copy-face" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy face</button></div>
         <div class="playback"><button id="play" class="small-button" aria-pressed="true">Pause</button><label class="speed-label">Speed <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label><span id="animation-info" class="muted"></span></div>
         <div class="mood-area"><div class="mood-heading"><h3>Moods</h3><button id="cycle-moods" class="small-button" type="button" aria-pressed="false" title="Play one animation loop per mood, then move to the next">Cycle moods</button></div><div id="states" class="states" role="group" aria-label="Animation state"></div></div>
       </div>
       <aside class="editor-panel" aria-labelledby="editor-title">
         <div class="panel-bar"><h2 id="editor-title">Character</h2><button id="undo" class="text-button" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12"/></svg>Undo</button></div>
-        <label class="field">Character name<input id="name" maxlength="40" value="Pixel" autocomplete="off"></label>
+        <label class="field"><span class="name-heading">Character name<span id="name-mode" class="badge">Automatic</span></span><input id="name" maxlength="40" placeholder="Automatic name" autocomplete="off" aria-describedby="name-hint"></label>
+        <div class="name-controls"><p id="name-hint" class="name-hint">This name follows the face. Type your own to keep it.</p><button id="auto-name" class="text-button" type="button" disabled>Use automatic name</button></div>
         <label class="field">Roll style<select id="vibe"><option value="any">Any</option><option value="cute">Cute</option><option value="cool">Cool</option><option value="weird">Weird</option></select></label>
         <div class="divider"></div>
         <p class="editor-hint">Lock a part to keep it when rolling.</p>
@@ -44,7 +45,7 @@
     </section>
     <section class="timeline-section" aria-labelledby="timeline-title"><div class="section-heading"><h2 id="timeline-title">Frames</h2><p>Select a frame to pause on it.</p></div><div id="frames" class="frames" role="group" aria-label="Animation frames"></div></section>
     <section class="gallery-section" aria-labelledby="gallery-title">
-      <div class="section-heading"><div><h2 id="gallery-title">Presets <span id="preset-count" class="count"></span></h2></div><label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search presets" aria-label="Search presets"></label></div>
+      <div class="section-heading"><div><h2 id="gallery-title">Presets <span id="preset-count" class="count"></span></h2></div><label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search names or presets" aria-label="Search names or presets"></label></div>
       <div id="filters" class="filters" role="group" aria-label="Filter presets"><button data-filter="any" aria-pressed="true">All faces</button><button data-filter="cute" aria-pressed="false">Cute</button><button data-filter="cool" aria-pressed="false">Cool</button><button data-filter="weird" aria-pressed="false">Weird</button></div>
       <div id="gallery" class="gallery"></div><p id="empty" class="empty" hidden>No faces found. Try another name or style.</p>
     </section>
@@ -55,3 +56,4 @@
   <footer><span class="brand-text">faceroll <span aria-hidden="true">(˘ω˘)</span></span><span>Built with the Faceroll library.</span></footer>
 </body>
 </html>
+
