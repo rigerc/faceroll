@@ -275,16 +275,18 @@ A `Character` is deeply frozen animation data: `{ name, nameMode?, seed?, parts,
 
 ### Automatic names
 
-Omit `name` to give each face a cute, normal human name, such as **Milo Bennett**.
-Every one of the 6,480 body/eyes/mouth configurations has a distinct full name.
-The same parts always get the same name across seeds, presets, sessions, and integrations;
+Omit `name` and Faceroll assigns a short, friendly first name, such as **Milo**.
+Names are selected deterministically from a curated pool of 324 names. The same
+face configuration always receives the same name, but different configurations may
+share one: character identity comes from its parts, not its display name. The same
+parts always get the same name across seeds, presets, sessions, and integrations;
 the selected mouth counts even when a bear renders its fixed mouth. Names do not
 consume random draws or change seeded face results.
 
 ```ts
 import { rollCharacter, nameForParts, createFaceroll } from "faceroll";
 const face = rollCharacter({ seed: "my-agent" });
-face.name;                 // automatic first name + surname
+face.name;                 // automatic single-word name, e.g. "Milo"
 nameForParts(face.parts);  // the same name without building animations
 const editor = createFaceroll();
 editor.roll();             // automatic name follows the new parts
@@ -294,8 +296,9 @@ editor.setName("");        // return to automatic naming
 
 `nameMode` is `"auto"` or `"custom"`. JSON exports and editor configs preserve it;
 pass it back with the saved name and parts when restoring. Snapshots without
-`nameMode` retain their existing nonblank names as custom names. Custom names
-may repeat; uniqueness applies to automatic names per configuration, not every roll.
+`nameMode` retain their existing nonblank names as custom names. Custom names may
+repeat and may contain spaces. Automatic names also repeat across different
+configurations, so a character is identified by its parts rather than its name.
 The playground shows human names on preset cards and supports searching by name
 or preset label. The name field shows Automatic or Custom; choose **Use automatic
 name** (or clear the field) to return to automatic naming.
@@ -442,6 +445,7 @@ npm install
 npm test          # vitest
 npm run typecheck
 npm run build     # tsup: ESM + CJS + .d.ts + CLI
+npm run check:size      # gzip budget per built entrypoint
 npm run test:smoke       # uses prebuilt dist and Node
 npm run build:fallback   # uses tsc when tsup is unavailable
 ```

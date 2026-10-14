@@ -68,6 +68,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "check:size": "node scripts/check-size.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run typecheck && npm test && npm run build",

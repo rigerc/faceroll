@@ -21,6 +21,8 @@ jobs:
       - run: npm run typecheck
       # The playground tests import from dist/ and playground-dist/, so build before testing them.
       - run: npm run build:playground
+      # Fails when an entrypoint's gzip size grows more than the budget in scripts/size-baseline.json.
+      - run: npm run check:size
       - run: npm test
       - run: npm run test:playground
       - run: npm run test:smoke
