@@ -32,6 +32,32 @@ interface CreateOptions { name?: string; nameMode?: "auto" | "custom"; seed?: st
 interface RerollOptions { seed?: string | number; rng?: Rng; vibe?: Vibe; }
 ```
 
+## Project/thread families (`src/children.ts`)
+
+```ts
+import { childCapacity, deriveChildCharacter, deriveChildCharacters } from "faceroll";
+
+const parent = rollCharacter({ seed: "project-42" });
+const children = deriveChildCharacters(parent, { count: 5, seed: "family-A" });
+const sameThread = deriveChildCharacter(parent, { index: 2, seed: "family-A" });
+```
+
+- `deriveChildCharacter(parent, { index, seed?, name? }): Character` — one zero-based stable thread slot; optional custom name.
+- `deriveChildCharacters(parent, { count, seed? }): Character[]` — distinct children in slot order.
+- `childCapacity(parent): number` — capacity of the fixed parent body.
+
+Child faces preserve the parent body and prioritize one-part differences in
+eyes/mouth before changing both. Seed affects the deterministic sibling order;
+omitting it is also deterministic. The parent is immutable and its saved parts
+suffice to recreate the family (even if the parent name changes). Persist each
+thread’s slot and the family seed in your application. Requests for negative,
+non-integer or out-of-range slots/counts throw `RangeError`.
+
+Uniqueness is defined by the rendered idle face, not just part IDs. Current
+capacity: 15 bear children (bear mouths are visually fixed), 239 otherwise.
+Child results have automatic names and full nine-state animations; they do not
+set `Character.seed`, since they are derived rather than individually rolled.
+
 ## Parts (`src/parts.ts`)
 
 ```ts
