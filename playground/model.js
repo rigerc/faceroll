@@ -11,8 +11,9 @@ export function restoreEditor(storage) {
         !["any", "cute", "cool", "weird"].includes(saved.vibe) ||
         !Object.keys(TABLES).every(kind => TABLES[kind].some(part => part.id === saved.parts?.[kind]) &&
           typeof saved.locks?.[kind] === "boolean")) throw new Error("Invalid saved character");
-    return createFaceroll({ name: saved.name, vibe: saved.vibe, parts: saved.parts, locks: saved.locks });
-  } catch { return createFaceroll({ name: "Pixel" }); }
+    if (saved.nameMode !== undefined && !["auto", "custom"].includes(saved.nameMode)) throw new Error("Invalid name mode");
+    return createFaceroll({ name: saved.name, nameMode: saved.nameMode, vibe: saved.vibe, parts: saved.parts, locks: saved.locks });
+  } catch { return createFaceroll(); }
 }
 
 /** UI history includes explicit part choices as well as rolls and presets. */
@@ -42,3 +43,4 @@ export function exportFilename(name, format) {
   const stem = name.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "character";
   return `${stem}.${{ prompt: "txt", json: "json", markdown: "md", node: "cjs" }[format]}`;
 }
+

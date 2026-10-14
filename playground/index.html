@@ -27,13 +27,13 @@
     <section id="workspace" class="workspace" aria-label="Character playground">
       <div class="preview-panel">
         <div class="panel-bar"><h2>Preview</h2><span id="motion-status" class="badge">Animating</span></div>
-        <div class="stage"><div class="stage-caption" id="character-caption">Pixel</div><div class="face-wrap"><span id="face" class="face" role="img" aria-label="Character preview"></span></div><p class="state-say"><span class="sample-label">Example:</span> <span id="state-say"></span></p><button id="copy-face" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy face</button></div>
+        <div class="stage"><div class="stage-caption" id="character-caption">Character</div><div class="face-wrap"><span id="face" class="face" role="img" aria-label="Character preview"></span></div><p class="state-say"><span class="sample-label">Example:</span> <span id="state-say"></span></p><button id="copy-face" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy face</button></div>
         <div class="playback"><button id="play" class="small-button" aria-pressed="true">Pause</button><label class="speed-label">Speed <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label><span id="animation-info" class="muted"></span></div>
         <div class="mood-area"><div class="mood-heading"><h3>Moods</h3><button id="cycle-moods" class="small-button" type="button" aria-pressed="false" title="Play one animation loop per mood, then move to the next">Cycle moods</button></div><div id="states" class="states" role="group" aria-label="Animation state"></div></div>
       </div>
       <aside class="editor-panel" aria-labelledby="editor-title">
         <div class="panel-bar"><h2 id="editor-title">Character</h2><button id="undo" class="text-button" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12"/></svg>Undo</button></div>
-        <label class="field">Character name<input id="name" maxlength="40" value="Pixel" autocomplete="off"></label>
+        <label class="field">Character name<input id="name" maxlength="40" placeholder="Automatic name" autocomplete="off" title="Enter a custom name, or clear to use the face’s automatic name"></label>
         <label class="field">Roll style<select id="vibe"><option value="any">Any</option><option value="cute">Cute</option><option value="cool">Cool</option><option value="weird">Weird</option></select></label>
         <div class="divider"></div>
         <p class="editor-hint">Lock a part to keep it when rolling.</p>
@@ -55,3 +55,4 @@
   <footer><span class="brand-text">faceroll <span aria-hidden="true">(˘ω˘)</span></span><span>Built with the Faceroll library.</span></footer>
 </body>
 </html>
+

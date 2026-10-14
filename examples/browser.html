@@ -27,7 +27,7 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
 <h1>Faceroll</h1>
 <p>Browser integration using the TypeScript core. The editor supports roll, undo, vibe selection, and per-part locks.</p>
 <div class="controls">
-  <label>Agent <input id="name" value="Pixel" maxlength="24"></label>
+  <label>Agent <input id="name" placeholder="Automatic name" maxlength="40" title="Enter a custom name, or clear for an automatic name"></label>
   <label>State <select id="state"></select></label>
   <label>Vibe <select id="vibe"><option>any</option><option>cute</option><option>cool</option><option>weird</option></select></label>
 </div>
@@ -56,8 +56,8 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch { /* storage may be unavailable */ }
   let editor;
-  try { editor = createFaceroll({ name: "Pixel", ...(saved && typeof saved === "object" ? saved : {}) }); }
-  catch { editor = createFaceroll({ name: "Pixel" }); }
+  try { editor = createFaceroll(saved && typeof saved === "object" ? saved : {}); }
+  catch { editor = createFaceroll(); }
   $("#name").value = editor.getConfig().name;
   $("#vibe").value = editor.getConfig().vibe;
   function persist() {
@@ -107,6 +107,7 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
     }
   }
   function refresh() {
+    if (document.activeElement !== $("#name")) $("#name").value = editor.getConfig().name;
     $("#output").textContent = editor.export($("#format").value);
     gallery();
     persist();
@@ -136,6 +137,7 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
   $("#format").addEventListener("change", refresh);
   $("#filter").addEventListener("change", gallery);
   $("#name").addEventListener("input", (event) => { editor.setName(event.target.value); refresh(); });
+  $("#name").addEventListener("blur", refresh);
   $("#copy").addEventListener("click", async () => { await navigator.clipboard.writeText(editor.export($("#format").value)); });
 
   function animate(now) {
@@ -148,3 +150,4 @@ pre { overflow: auto; max-height: 260px; padding: 1rem; background: #7772; }
 </script>
 </body>
 </html>
+

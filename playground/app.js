@@ -136,7 +136,7 @@ function renderGallery() {
 function renderExport() { $("#output").textContent = editor.export(format); }
 function renderControls() {
   const config = editor.getConfig();
-  $("#name").value = config.name;
+  if (document.activeElement !== $("#name")) $("#name").value = config.name;
   $("#vibe").value = config.vibe;
   $("#character-caption").textContent = config.name || "Unnamed character";
   $("#undo").disabled = history.length === 0;
@@ -217,9 +217,10 @@ $("#name").addEventListener("input", event => {
   editor.setName(event.target.value);
   renderControls();
   renderExport();
-  $("#face").setAttribute("aria-label", `${event.target.value || "Character"}, ${state} expression`);
+  $("#face").setAttribute("aria-label", `${editor.getConfig().name}, ${state} expression`);
   persist();
 });
+$("#name").addEventListener("blur", renderControls);
 $("#vibe").addEventListener("change", event => { history.change(() => editor.setVibe(event.target.value)); refresh(); });
 $("#play").addEventListener("click", () => { playing = !playing; startPlayback(); });
 $("#cycle-moods").addEventListener("click", () => {
@@ -295,3 +296,4 @@ document.addEventListener("visibilitychange", () => {
 });
 window.addEventListener("pagehide", stopPlayback);
 refresh();
+

@@ -165,3 +165,12 @@ The HTTP app, Effect configuration and logger, Effect-to-MCP schema adapter,
 JSON helpers, startup/shutdown workflow and Vite build derive from the template.
 Faceroll-specific tools and integration tests replace its example tools.
 The template's MIT copyright notice is preserved in [LICENSE](LICENSE).
+
+
+### Character names
+
+Characters receive a unique, reproducible human name for their selected parts when
+`name` is omitted or blank. Set `name` for a custom name. Save and pass `nameMode`
+(`"auto"` or `"custom"`) with a returned snapshot when rerolling or exporting it:
+automatic names follow new parts, while custom names stay fixed. Older saved
+snapshots without a mode preserve their supplied nonblank names as custom.

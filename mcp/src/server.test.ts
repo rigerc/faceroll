@@ -78,6 +78,31 @@ describe.each(["memory", "http"] as const)("Faceroll tools over %s", (transport)
     expect(result.structuredContent).toEqual({ presets: expected });
   });
 
+  it("preserves automatic naming through rerolls and exports", async () => {
+    const client = await setupClient(transport);
+    const rolled = await client.callTool({ name: "roll_character", arguments: { preset: "classic" } });
+    const snapshot = rolled.structuredContent as { name: string; nameMode: "auto"; parts: typeof parts };
+    expect(snapshot.nameMode).toBe("auto");
+    expect(snapshot.name).toBe(createCharacter(parts).name);
+    const rerolled = await client.callTool({ name: "reroll_part", arguments: {
+      name: snapshot.name, nameMode: snapshot.nameMode, parts: snapshot.parts, kind: "eyes", seed: "names",
+    } });
+    const next = rerolled.structuredContent as typeof snapshot;
+    expect(next.nameMode).toBe("auto");
+    expect(next.name).not.toBe(snapshot.name);
+    expect(next.name).toBe(createCharacter(next.parts).name);
+    const exported = await client.callTool({ name: "export_character", arguments: {
+      name: next.name, nameMode: next.nameMode, parts: next.parts, format: "json",
+    } });
+    const data = JSON.parse((exported.structuredContent as { text: string }).text);
+    expect(data.name).toBe(next.name);
+    expect(data.nameMode).toBe("auto");
+    const legacy = await client.callTool({ name: "reroll_part", arguments: {
+      name: "Agent", parts, kind: "eyes", seed: "names",
+    } });
+    expect(legacy.structuredContent).toMatchObject({ name: "Agent", nameMode: "custom" });
+  });
+
   it("reproduces a seeded character and emits matching JSON text", async () => {
     const client = await setupClient(transport);
     const args = { seed: "pixel", name: "Pixel", vibe: "cute", lock: { body: "bear" } };
@@ -193,3 +218,4 @@ it("exits when a stdio client closes stdin", async () => {
   });
   expect(code).toBe(0);
 });
+

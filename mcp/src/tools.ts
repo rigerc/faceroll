@@ -11,6 +11,7 @@ import { createErrorResult, createTextResult, runMcpEffect } from "./lib/utils.t
 
 const ids = listParts();
 const Vibe = Schema.Literal("any", "cute", "cool", "weird");
+const NameMode = Schema.Literal("auto", "custom");
 const Seed = Schema.Union(Schema.String, Schema.Number);
 const Parts = Schema.Struct({
   body: Schema.Literal(...ids.body),
@@ -19,6 +20,7 @@ const Parts = Schema.Struct({
 });
 const SelectionFields = {
   name: Schema.optional(Schema.String),
+  nameMode: Schema.optional(NameMode),
   seed: Schema.optional(Seed),
   vibe: Schema.optional(Vibe),
   preset: Schema.optional(Schema.Literal(...FACE_PRESETS.map((preset) => preset.id))),
@@ -27,6 +29,7 @@ const SelectionFields = {
 const Selection = Schema.Struct(SelectionFields);
 const SnapshotFields = {
   name: Schema.optional(Schema.String),
+  nameMode: Schema.optional(NameMode),
   parts: Parts,
   seed: Schema.optional(Schema.String),
 };
@@ -34,6 +37,7 @@ const Frame = Schema.Tuple(Schema.String, Schema.Number);
 const Animation = Schema.Struct({ still: Schema.String, frames: Schema.Array(Frame) });
 const CharacterOutput = Schema.Struct({
   name: Schema.String,
+  nameMode: Schema.optional(NameMode),
   seed: Schema.optional(Schema.String),
   parts: Parts,
   animations: Schema.Struct(Object.fromEntries(STATE_NAMES.map((state) => [state, Animation]))),
@@ -45,10 +49,14 @@ type SelectionArgs = typeof Selection.Type;
 function selectCharacter(args: SelectionArgs): Character {
   if (args.preset) {
     return createCharacter({ ...getFacePreset(args.preset).parts, ...args.lock },
-      args.name !== undefined ? { name: args.name } : {});
+      {
+        ...(args.name !== undefined ? { name: args.name } : {}),
+        ...(args.nameMode !== undefined ? { nameMode: args.nameMode } : {}),
+      });
   }
   const options: RollOptions = {
     ...(args.name !== undefined ? { name: args.name } : {}),
+    ...(args.nameMode !== undefined ? { nameMode: args.nameMode } : {}),
     ...(args.seed !== undefined ? { seed: args.seed } : {}),
     ...(args.vibe !== undefined ? { vibe: args.vibe } : {}),
     ...(args.lock !== undefined ? { lock: args.lock } : {}),
@@ -101,7 +109,7 @@ export function registerTools(server: McpServer): void {
 
   server.registerTool("roll_character", {
     title: "Create an agent character",
-    description: "Roll an animated ASCII character, or choose a named preset. The same seed and options reproduce a roll. Locked parts override preset parts. Returns parts and all nine animations; save parts for later tools.",
+    description: "Roll an animated ASCII character, or choose a named preset. The same seed and options reproduce a roll. Locked parts override preset parts. Returns a unique automatic name per part combination unless a custom name is supplied. Save parts and nameMode for later tools.",
     inputSchema: toMcpSchema(Selection),
     outputSchema: toMcpSchema(CharacterOutput),
     annotations: { ...annotations, idempotentHint: false },
@@ -109,7 +117,7 @@ export function registerTools(server: McpServer): void {
 
   server.registerTool("reroll_part", {
     title: "Reroll one face part",
-    description: "Replace a character's body, eyes or mouth while retaining the other parts and its name. Pass saved parts and an optional seed for reproducibility.",
+    description: "Replace a character's body, eyes or mouth while retaining the other parts and any custom name. Automatic names follow the new parts; pass nameMode from the saved snapshot. Pass saved parts and an optional seed for reproducibility.",
     inputSchema: toMcpSchema(Schema.Struct({
       ...SnapshotFields, seed: Schema.optional(Seed),
       kind: Schema.Literal(...PART_KINDS), vibe: Schema.optional(Vibe),
@@ -117,7 +125,10 @@ export function registerTools(server: McpServer): void {
     outputSchema: toMcpSchema(CharacterOutput),
     annotations: { ...annotations, idempotentHint: false },
   }, (args) => execute(() => serialize(rerollPart(
-    createCharacter(args.parts, args.name !== undefined ? { name: args.name } : {}), args.kind, {
+    createCharacter(args.parts, {
+      ...(args.name !== undefined ? { name: args.name } : {}),
+      ...(args.nameMode !== undefined ? { nameMode: args.nameMode } : {}),
+    }), args.kind, {
       ...(args.seed !== undefined ? { seed: args.seed } : {}),
       ...(args.vibe !== undefined ? { vibe: args.vibe } : {}),
     },
@@ -145,6 +156,7 @@ export function registerTools(server: McpServer): void {
   }, (args) => execute(() => {
     const character = createCharacter(args.parts, {
       ...(args.name !== undefined ? { name: args.name } : {}),
+      ...(args.nameMode !== undefined ? { nameMode: args.nameMode } : {}),
       ...(args.seed !== undefined ? { seed: args.seed } : {}),
     });
     const text = args.format === "prompt" ? toSystemPrompt(character)
@@ -154,3 +166,4 @@ export function registerTools(server: McpServer): void {
     return { format: args.format, text };
   }));
 }
+

@@ -109,6 +109,8 @@ test("named presets are immutable and can be selected in the CLI", () => {
   const selected = spawnSync(process.execPath, [cli, "roll", "--preset", "kitty", "--format", "json"], { encoding: "utf8" });
   assert.equal(selected.status, 0, selected.stderr);
   assert.deepEqual(JSON.parse(selected.stdout).parts, { body: "cat", eyes: "cat", mouth: "cat" });
+  assert.equal(JSON.parse(selected.stdout).name, esm.createPresetCharacter("kitty").name);
+  assert.equal(JSON.parse(selected.stdout).nameMode, "auto");
   const invalid = spawnSync(process.execPath, [cli, "roll", "--preset", "unknown"], { encoding: "utf8" });
   assert.equal(invalid.status, 2);
 });
@@ -178,7 +180,7 @@ test("Web Component handles SSR, presets, states, pause and character overrides"
       get: (name) => elements.get(name),
       define: (name, ctor) => elements.set(name, ctor),
     };
-    globalThis.document = { createElement: () => ({ textContent: "", setAttribute() {} }) };
+    globalThis.document = { createElement: () => ({ textContent: "", attrs: new Map(), setAttribute(key, value) { this.attrs.set(key, value); } }) };
     assert.equal(defineFacerollElement(), true);
     assert.equal(defineFacerollElement(), false);
 
@@ -188,6 +190,11 @@ test("Web Component handles SSR, presets, states, pause and character overrides"
     face.isConnected = true;
     face.connectedCallback();
     assert.equal(face._face.textContent, kitty.animations.idle.still);
+    assert.equal(face._face.attrs.get("aria-label"), `${kitty.name}: idle`);
+    face.setAttribute("name", "Pixel");
+    assert.equal(face._face.attrs.get("aria-label"), "Pixel: idle");
+    face.setAttribute("name", "");
+    assert.equal(face._face.attrs.get("aria-label"), `${kitty.name}: idle`);
     face.state = "happy";
     assert.equal(face._face.textContent, kitty.animations.happy.still);
     const another = esm.createPresetCharacter("hacker", { name: "Byte" });
@@ -201,3 +208,4 @@ test("Web Component handles SSR, presets, states, pause and character overrides"
     }
   }
 });
+

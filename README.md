@@ -226,9 +226,34 @@ See [framework integration documentation](docs/frameworks.md).
 | `listParts()` | Every valid id for `body`, `eyes` and `mouth`. |
 | `partPool(kind, vibe?)` | Ids that fit a vibe. |
 
-A `Character` is deeply frozen animation data: `{ name, seed?, parts, animations }`. Rolling without a seed generates one and stores it on the character so you can reproduce it. If you pass your own `rng`, no seed is recorded.
+A `Character` is deeply frozen animation data: `{ name, nameMode?, seed?, parts, animations }`. Rolling without a seed generates one and stores it on the character so you can reproduce it. If you pass your own `rng`, no seed is recorded.
 
 `vibe` is `"any"`, `"cute"`, `"cool"` or `"weird"`. A bear body always **renders** with the `ᴥ` mouth, but `character.parts.mouth` retains your selected mouth (for example, `"w"`). When the body changes, the saved preference is restored. Serialized characters also preserve this choice.
+
+### Automatic names
+
+Omit `name` to give each face a cute, normal human name, such as **Milo Bennett**.
+Every one of the 6,480 body/eyes/mouth configurations has a distinct full name.
+The same parts always get the same name across seeds, presets, sessions, and integrations;
+the selected mouth counts even when a bear renders its fixed mouth. Names do not
+consume random draws or change seeded face results.
+
+```ts
+import { rollCharacter, nameForParts, createFaceroll } from "faceroll";
+const face = rollCharacter({ seed: "my-agent" });
+face.name;                 // automatic first name + surname
+nameForParts(face.parts);  // the same name without building animations
+const editor = createFaceroll();
+editor.roll();             // automatic name follows the new parts
+editor.setName("Pixel");   // custom name stays through rolls and edits
+editor.setName("");        // return to automatic naming
+```
+
+`nameMode` is `"auto"` or `"custom"`. JSON exports and editor configs preserve it;
+pass it back with the saved name and parts when restoring. Snapshots without
+`nameMode` retain their existing nonblank names as custom names. Custom names
+may repeat; uniqueness applies to automatic names per configuration, not every roll.
+Clear the playground's name field to return to automatic naming.
 
 ### States
 
@@ -280,7 +305,7 @@ By default, the editor retains the last 30 successful roll/reroll snapshots.
 Override with `historyLimit` (0 disables undo). Locks and vibe remain in effect
 after undo. Pass `{ seed: "..." }` for a deterministic sequence of rolls, or
 pass a custom `rng` function. `getConfig()` returns a plain object containing
-`name`, `vibe`, `parts`, and `locks`, suitable for saving to localStorage in an app. You can also pass the earlier editor's `random` option; `rng` is the preferred name.
+`name`, `nameMode`, `vibe`, `parts`, and `locks`, suitable for saving to localStorage in an app. You can also pass the earlier editor's `random` option; `rng` is the preferred name.
 
 `setParts({ body: "bear", mouth: "w" })` keeps `"w"` as the selected mouth,
 even though the bear renders with its special `ᴥ` glyph; changing the body
@@ -358,3 +383,4 @@ TypeScript 5.x is required for the build (tsup's declaration bundler does not su
 ## License
 
 MIT (the original package supplied an MIT license; verify redistribution rights for any incorporated original HTML assets before publication).
+

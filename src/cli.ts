@@ -20,7 +20,7 @@ Options
   --seed <text>      Same seed, same character
   --preset <id>      Choose a named face (see "faceroll presets")
   --vibe <any|cute|cool|weird>
-  --name <text>      Agent name (default "Agent")
+  --name <text>      Custom name (default: automatic face name)
   --body <id>        Lock the body
   --eyes <id>        Lock the eyes
   --mouth <id>       Lock the mouth
@@ -157,3 +157,4 @@ main().catch((e: unknown) => {
   process.stderr.write(`faceroll: ${e instanceof Error ? e.message : String(e)}\n`);
   process.exit(1);
 });
+
