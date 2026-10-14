@@ -82,6 +82,16 @@ test("preset search combines style and normalized text and permits empty results
   assert.ok(filterPresets(FACE_PRESETS, "weird", "weird").every(preset => preset.vibe === "weird"));
 });
 
+test("preset search finds generated first names and surnames alongside preset labels", () => {
+  const classic = FACE_PRESETS.find(preset => preset.id === "classic");
+  const name = nameForParts(classic.parts);
+  assert.deepEqual(filterPresets(FACE_PRESETS, "any", ` ${name.toUpperCase()} `).map(preset => preset.id), ["classic"]);
+  for (const word of name.split(" ")) {
+    assert.ok(filterPresets(FACE_PRESETS, "cute", word).some(preset => preset.id === "classic"));
+  }
+  assert.equal(filterPresets(FACE_PRESETS, "cool", name).length, 0);
+});
+
 test("download names are safe and match export content", () => {
   assert.equal(exportFilename("../../Nova / Agent", "json"), "nova-agent.json");
   assert.equal(exportFilename("♡", "node"), "character.cjs");

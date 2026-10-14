@@ -1,4 +1,4 @@
-import { createFaceroll, BODIES, EYES, MOUTHS } from "./lib/index.js";
+import { createFaceroll, BODIES, EYES, MOUTHS, nameForParts } from "./lib/index.js";
 
 export const STORAGE_KEY = "faceroll:playground:v1";
 export const TABLES = { body: BODIES, eyes: EYES, mouth: MOUTHS };
@@ -36,7 +36,7 @@ export function createHistory(editor) {
 export function filterPresets(presets, vibe, query) {
   const term = query.trim().toLowerCase();
   return presets.filter(preset => (vibe === "any" || preset.vibe === vibe) &&
-    `${preset.label} ${preset.id} ${preset.vibe}`.toLowerCase().includes(term));
+    `${nameForParts(preset.parts)} ${preset.label} ${preset.id} ${preset.vibe}`.toLowerCase().includes(term));
 }
 
 export function exportFilename(name, format) {

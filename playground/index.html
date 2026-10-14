@@ -22,7 +22,7 @@
   </header>
   <main>
     <section class="intro" aria-labelledby="title">
-      <div><h1 id="title">Kaomoji playground</h1><p class="subtitle">Choose a face, edit its parts, and preview each expression.</p></div>
+      <div><h1 id="title">Kaomoji playground</h1><p class="subtitle">Meet a named face, edit its parts, and preview each expression.</p></div>
     </section>
     <section id="workspace" class="workspace" aria-label="Character playground">
       <div class="preview-panel">
@@ -33,7 +33,8 @@
       </div>
       <aside class="editor-panel" aria-labelledby="editor-title">
         <div class="panel-bar"><h2 id="editor-title">Character</h2><button id="undo" class="text-button" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12"/></svg>Undo</button></div>
-        <label class="field">Character name<input id="name" maxlength="40" placeholder="Automatic name" autocomplete="off" title="Enter a custom name, or clear to use the face’s automatic name"></label>
+        <label class="field"><span class="name-heading">Character name<span id="name-mode" class="badge">Automatic</span></span><input id="name" maxlength="40" placeholder="Automatic name" autocomplete="off" aria-describedby="name-hint"></label>
+        <div class="name-controls"><p id="name-hint" class="name-hint">This name follows the face. Type your own to keep it.</p><button id="auto-name" class="text-button" type="button" disabled>Use automatic name</button></div>
         <label class="field">Roll style<select id="vibe"><option value="any">Any</option><option value="cute">Cute</option><option value="cool">Cool</option><option value="weird">Weird</option></select></label>
         <div class="divider"></div>
         <p class="editor-hint">Lock a part to keep it when rolling.</p>
@@ -44,7 +45,7 @@
     </section>
     <section class="timeline-section" aria-labelledby="timeline-title"><div class="section-heading"><h2 id="timeline-title">Frames</h2><p>Select a frame to pause on it.</p></div><div id="frames" class="frames" role="group" aria-label="Animation frames"></div></section>
     <section class="gallery-section" aria-labelledby="gallery-title">
-      <div class="section-heading"><div><h2 id="gallery-title">Presets <span id="preset-count" class="count"></span></h2></div><label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search presets" aria-label="Search presets"></label></div>
+      <div class="section-heading"><div><h2 id="gallery-title">Presets <span id="preset-count" class="count"></span></h2></div><label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search names or presets" aria-label="Search names or presets"></label></div>
       <div id="filters" class="filters" role="group" aria-label="Filter presets"><button data-filter="any" aria-pressed="true">All faces</button><button data-filter="cute" aria-pressed="false">Cute</button><button data-filter="cool" aria-pressed="false">Cool</button><button data-filter="weird" aria-pressed="false">Weird</button></div>
       <div id="gallery" class="gallery"></div><p id="empty" class="empty" hidden>No faces found. Try another name or style.</p>
     </section>

@@ -429,6 +429,30 @@ h2 {
   min-height:42px
 }
 
+.name-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px
+}
+
+.name-controls {
+  margin-top:8px
+}
+
+.name-hint {
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.5;
+  margin:0
+}
+
+.name-controls .text-button {
+  min-height:36px;
+  padding:6px 0;
+  font-size:12px
+}
+
 .divider {
   height:1px;
   background:var(--line);
@@ -656,12 +680,16 @@ h2 {
 
 .preset-name {
   font-size:13px;
-  font-weight:500
+  font-weight:500;
+  text-align:center;
+  overflow-wrap:anywhere
 }
 
 .preset-vibe {
   font-size:12px;
-  color:var(--muted)
+  color:var(--muted);
+  text-align:center;
+  overflow-wrap:anywhere
 }
 
 .empty {
@@ -1118,3 +1146,4 @@ a {
     display:none
   }
 }
+

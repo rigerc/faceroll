@@ -253,7 +253,9 @@ editor.setName("");        // return to automatic naming
 pass it back with the saved name and parts when restoring. Snapshots without
 `nameMode` retain their existing nonblank names as custom names. Custom names
 may repeat; uniqueness applies to automatic names per configuration, not every roll.
-Clear the playground's name field to return to automatic naming.
+The playground shows human names on preset cards and supports searching by name
+or preset label. The name field shows Automatic or Custom; choose **Use automatic
+name** (or clear the field) to return to automatic naming.
 
 ### States
 
