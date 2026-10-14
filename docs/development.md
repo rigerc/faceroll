@@ -17,6 +17,12 @@ npm run test:playground  # Node tests against the built playground
 Vitest runs only `test/**/*.test.ts`. The `.mjs` smoke and playground suites
 use Node's test runner via their separate commands and require built output.
 
+In the playground, **Cycle moods** plays one complete animation loop per mood
+and wraps through all nine moods at the selected speed. Pause also pauses cycling;
+Play resumes from the current mood. Selecting a mood or an individual frame stops
+cycling. Cycling starts only when explicitly enabled and stops when a reduced-motion
+preference is enabled. Hidden pages suspend playback and cycling until visible again.
+
 TypeScript 5.x is required (tsup's declaration bundler doesn't support TS 7 yet).
 
 ## Layout

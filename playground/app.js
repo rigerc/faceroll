@@ -2,12 +2,22 @@ import { createPlayer, createPresetCharacter, FACE_PRESETS, STATES } from "./lib
 import { STORAGE_KEY, TABLES, restoreEditor, createHistory, filterPresets, exportFilename } from "./model.js";
 
 const $ = selector => document.querySelector(selector);
+const ICON_PATHS = {
+  lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4"/>',
+  unlock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0"/>',
+  roll: '<path d="m18 2 4 4-4 4M2 18h2.5c6 0 9-12 15-12H22m-4 8 4 4-4 4M2 6h2.5c2.2 0 4 1.6 5.5 4m4 4c1.5 2.4 3.3 4 5.5 4H22"/>',
+};
+function icon(name) {
+  return `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[name]}</svg>`;
+}
 let storage;
 try { storage = window.localStorage; } catch { /* Restricted storage still permits editing. */ }
 const editor = restoreEditor(storage);
 const history = createHistory(editor);
 const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let playing = !motion.matches;
+let cycling = false;
+let moodTimer;
 let state = "idle";
 let speed = 1;
 let filter = "any";
@@ -38,12 +48,27 @@ const player = createPlayer((frame, index) => showFrame(frame.text, index), {
 function updatePlayback() {
   $("#play").textContent = playing ? "Pause" : "Play";
   $("#play").setAttribute("aria-pressed", String(playing));
-  $("#motion-status").textContent = playing ? "Animating" : "Paused";
+  $("#cycle-moods").setAttribute("aria-pressed", String(cycling));
+  $("#motion-status").textContent = playing ? (cycling ? "Cycling moods" : "Animating") : "Paused";
+}
+function stopPlayback() {
+  player.stop();
+  clearTimeout(moodTimer);
+  moodTimer = undefined;
 }
 function startPlayback() {
-  player.stop();
+  stopPlayback();
   updatePlayback();
-  if (playing && !document.hidden) player.play(editor.getAnimation(state));
+  if (playing && !document.hidden) {
+    const animation = editor.getAnimation(state);
+    player.play(animation);
+    if (cycling) {
+      moodTimer = setTimeout(() => {
+        state = STATES[(STATES.findIndex(entry => entry.id === state) + 1) % STATES.length].id;
+        renderAnimation();
+      }, animation.duration / speed);
+    }
+  }
 }
 function renderAnimation() {
   const animation = editor.getAnimation(state);
@@ -63,11 +88,12 @@ function renderAnimation() {
     face.textContent = frame.text;
     const time = document.createElement("span");
     time.className = "frame-time";
-    time.textContent = `${index + 1} / ${frame.ms}ms`;
+    time.textContent = `${index + 1} · ${frame.ms} ms`;
     button.append(face, time);
     button.addEventListener("click", () => {
       playing = false;
-      player.stop();
+      cycling = false;
+      stopPlayback();
       showFrame(frame.text, index);
       updatePlayback();
     });
@@ -112,7 +138,7 @@ function renderControls() {
   const config = editor.getConfig();
   $("#name").value = config.name;
   $("#vibe").value = config.vibe;
-  $("#character-caption").textContent = `Meet ${config.name || "your character"}`;
+  $("#character-caption").textContent = config.name || "Unnamed character";
   $("#undo").disabled = history.length === 0;
   $("#roll").disabled = Object.values(config.locks).every(Boolean);
   $("#mouth-note").hidden = config.parts.body !== "bear";
@@ -120,8 +146,9 @@ function renderControls() {
     const { select, lock, reroll } = partControls[kind];
     select.value = config.parts[kind];
     lock.setAttribute("aria-pressed", String(config.locks[kind]));
-    lock.textContent = config.locks[kind] ? "●" : "○";
+    lock.innerHTML = icon(config.locks[kind] ? "lock" : "unlock");
     lock.title = `${config.locks[kind] ? "Unlock" : "Lock"} ${kind} for random rolls`;
+    lock.setAttribute("aria-label", lock.title);
     reroll.disabled = config.locks[kind];
   }
 }
@@ -138,7 +165,7 @@ for (const entry of STATES) {
   button.type = "button";
   button.textContent = entry.label;
   button.title = entry.use;
-  button.addEventListener("click", () => { state = entry.id; renderAnimation(); });
+  button.addEventListener("click", () => { cycling = false; state = entry.id; renderAnimation(); });
   $("#states").append(button);
   stateButtons.set(entry.id, button);
 }
@@ -175,7 +202,7 @@ for (const [kind, table] of Object.entries(TABLES)) {
   const reroll = document.createElement("button");
   reroll.className = "icon-button";
   reroll.type = "button";
-  reroll.textContent = "⤨";
+  reroll.innerHTML = icon("roll");
   reroll.title = `Reroll ${kind}`;
   reroll.setAttribute("aria-label", `Reroll ${kind}`);
   reroll.addEventListener("click", () => { history.change(() => editor.reroll(kind)); refresh(); });
@@ -195,6 +222,11 @@ $("#name").addEventListener("input", event => {
 });
 $("#vibe").addEventListener("change", event => { history.change(() => editor.setVibe(event.target.value)); refresh(); });
 $("#play").addEventListener("click", () => { playing = !playing; startPlayback(); });
+$("#cycle-moods").addEventListener("click", () => {
+  cycling = !cycling;
+  if (cycling) playing = true;
+  startPlayback();
+});
 $("#speed").addEventListener("change", event => { speed = Number(event.target.value); startPlayback(); });
 $("#search").addEventListener("input", renderGallery);
 $("#filters").addEventListener("click", event => {
@@ -236,7 +268,7 @@ async function copy(text, success) {
     notify("Clipboard unavailable. Copy the selected text, then choose Done.");
   }
 }
-$("#copy-face").addEventListener("click", () => copy($("#face").textContent, "Face copied. Go say something!"));
+$("#copy-face").addEventListener("click", () => copy($("#face").textContent, "Face copied"));
 $("#copy-export").addEventListener("click", () => copy(editor.export(format), "Character export copied"));
 $("#download").addEventListener("click", () => {
   const type = format === "json" ? "application/json" : "text/plain;charset=utf-8";
@@ -252,14 +284,15 @@ $("#download").addEventListener("click", () => {
 motion.addEventListener("change", () => {
   if (motion.matches) {
     playing = false;
-    player.stop();
+    cycling = false;
+    stopPlayback();
     showFrame(editor.getStill(state), -1);
     updatePlayback();
   }
 });
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) player.stop();
+  if (document.hidden) stopPlayback();
   else startPlayback();
 });
-window.addEventListener("pagehide", () => player.stop());
+window.addEventListener("pagehide", stopPlayback);
 refresh();
