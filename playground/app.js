@@ -1,4 +1,4 @@
-import { createPlayer, createPresetCharacter, FACE_PRESETS, STATES } from "./lib/index.js";
+import { createPlayer, createPresetCharacter, childCapacity, deriveChildCharacters, FACE_PRESETS, serialize, STATES } from "./lib/index.js";
 import { STORAGE_KEY, TABLES, restoreEditor, createHistory, filterPresets, exportFilename } from "./model.js";
 
 const $ = selector => document.querySelector(selector);
@@ -14,6 +14,83 @@ let storage;
 try { storage = window.localStorage; } catch { /* Restricted storage still permits editing. */ }
 const editor = restoreEditor(storage);
 const history = createHistory(editor);
+const FAMILY_STORAGE_KEY = "faceroll:family:v1";
+let familyKey;
+let familyChildren = [];
+let familyCapacity;
+let familyParentKey;
+try {
+  const saved = JSON.parse(storage?.getItem(FAMILY_STORAGE_KEY) ?? "null");
+  if (saved && typeof saved.seed === "string" && saved.seed.length <= 100 &&
+      Number.isSafeInteger(saved.count) && saved.count >= 1 && saved.count <= 239) {
+    $("#family-seed").value = saved.seed;
+    $("#family-count").value = String(saved.count);
+  }
+} catch { /* Stored settings are optional. */ }
+function saveFamilySettings() {
+  try {
+    storage?.setItem(FAMILY_STORAGE_KEY, JSON.stringify({
+      seed: $("#family-seed").value,
+      count: Number($("#family-count").value),
+    }));
+  } catch { /* Storage may be restricted. */ }
+}
+function renderFamily() {
+  const parent = editor.getCharacter();
+  const parentKey = JSON.stringify(parent.parts);
+  if (familyParentKey !== parentKey) {
+    familyParentKey = parentKey;
+    familyCapacity = childCapacity(parent);
+  }
+  const countInput = $("#family-count");
+  countInput.max = String(familyCapacity);
+  const entered = Number(countInput.value);
+  const count = Math.min(familyCapacity, Math.max(1, Number.isSafeInteger(entered) ? entered : 5));
+  if (countInput.value !== "") countInput.value = String(count);
+  const seed = $("#family-seed").value;
+  const key = JSON.stringify([parent.parts, seed, count]);
+  if (key !== familyKey) {
+    familyKey = key;
+    familyChildren = deriveChildCharacters(parent, { count, seed });
+  }
+  const parentRow = $("#family-parent");
+  parentRow.replaceChildren();
+  parentRow.append("Project parent", Object.assign(document.createElement("strong"), {
+    textContent: parent.animations.idle.still,
+  }), parent.name);
+  const cards = familyChildren.map((child, index) => {
+    const card = document.createElement("article");
+    card.className = "family-card";
+    const slot = document.createElement("span");
+    slot.className = "family-slot";
+    slot.textContent = `Thread slot ${index}`;
+    const face = document.createElement("span");
+    face.className = "family-face";
+    face.textContent = child.animations[state].still;
+    face.setAttribute("role", "img");
+    face.setAttribute("aria-label", `${child.name}, ${state}`);
+    const name = document.createElement("span");
+    name.className = "family-name";
+    name.textContent = child.name;
+    const actions = document.createElement("div");
+    actions.className = "family-actions";
+    const copyFace = document.createElement("button");
+    copyFace.type = "button";
+    copyFace.className = "small-button";
+    copyFace.textContent = "Copy face";
+    copyFace.addEventListener("click", () => copy(child.animations[state].still, `Thread ${index} face copied`));
+    const copyJson = document.createElement("button");
+    copyJson.type = "button";
+    copyJson.className = "small-button";
+    copyJson.textContent = "Copy JSON";
+    copyJson.addEventListener("click", () => copy(JSON.stringify({ index, character: serialize(child) }, null, 2), `Thread ${index} JSON copied`));
+    actions.append(copyFace, copyJson);
+    card.append(slot, face, name, actions);
+    return card;
+  });
+  $("#family-children").replaceChildren(...cards);
+}
+
 const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let playing = !motion.matches;
 let cycling = false;
@@ -102,6 +179,7 @@ function renderAnimation() {
   $("#frames").replaceChildren(...frameButtons);
   showFrame(animation.still, -1);
   startPlayback();
+  renderFamily();
 }
 
 function renderGallery() {
@@ -219,6 +297,8 @@ for (const [kind, table] of Object.entries(TABLES)) {
   partControls[kind] = { select, lock, reroll };
 }
 
+$("#family-seed").addEventListener("input", () => { renderFamily(); saveFamilySettings(); });
+$("#family-count").addEventListener("input", () => { renderFamily(); saveFamilySettings(); });
 $("#roll").addEventListener("click", () => { history.change(() => editor.roll()); refresh(); });
 $("#undo").addEventListener("click", () => { history.undo(); refresh(); });
 $("#name").addEventListener("input", event => {
@@ -284,6 +364,17 @@ async function copy(text, success) {
     notify("Clipboard unavailable. Copy the selected text, then choose Done.");
   }
 }
+$("#copy-family").addEventListener("click", () => {
+  const parent = editor.getCharacter();
+  const data = {
+    parent: { name: parent.name, parts: parent.parts },
+    seed: $("#family-seed").value,
+    children: familyChildren.map((child, index) => ({
+      index, name: child.name, parts: child.parts,
+    })),
+  };
+  copy(JSON.stringify(data, null, 2), "Family JSON copied");
+});
 $("#copy-face").addEventListener("click", () => copy($("#face").textContent, "Face copied"));
 $("#copy-export").addEventListener("click", () => copy(editor.export(format), "Character export copied"));
 $("#download").addEventListener("click", () => {
