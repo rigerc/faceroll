@@ -25,6 +25,8 @@ export { buildAnimations } from "./build";
 export type { Animation } from "./build";
 
 export { createCharacter, listParts, rerollPart, rollCharacter } from "./character";
+export { childCapacity, deriveChildCharacter, deriveChildCharacters } from "./children";
+export type { ChildOptions, ChildCharacterOptions, ChildCharactersOptions } from "./children";
 
 export { Faceroll, createFaceroll } from "./editor";
 export type { ExportFormat, FacerollConfig, FacerollOptions, PartLocks } from "./editor";
