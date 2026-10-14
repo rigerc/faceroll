@@ -239,3 +239,15 @@ footer{max-width:none;background:var(--surface);padding:22px 30px}
   .mobile-roll{bottom:calc(76px + env(safe-area-inset-bottom));right:10px}
 }
 @media(prefers-reduced-motion:reduce){button{transition:none}}
+
+/* Thread family stays visible in Studio and expands below the work surface. */
+.family-peek{padding:0 0 19px;margin:-2px 0 18px;border-bottom:1px solid var(--line)}
+.family-peek-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:11px}
+.family-peek-head strong{font-size:13px}
+.family-peek-head a{font-size:11px;color:var(--accent);font-weight:700;text-decoration:none;white-space:nowrap}
+.family-peek-faces{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.family-peek-tile{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:10px 2px;
+  background:var(--studio-subtle);border:1px solid var(--line);border-radius:9px}
+.family-peek-face{font:16px/1.6 var(--face-font);white-space:pre;max-width:100%;overflow:hidden}
+.family-peek-tile small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:var(--muted)}
+@media(max-width:760px){.family-peek{display:none}}
