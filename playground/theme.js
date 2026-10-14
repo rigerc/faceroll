@@ -9,7 +9,7 @@
   function applyTheme() {
     const theme = preference === "system" ? (systemTheme.matches ? "dark" : "light") : preference;
     document.documentElement.dataset.theme = theme;
-    document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#151c16" : "#f7f8f2";
+    document.querySelector('meta[name="theme-color"]').content = theme === "dark" ? "#151921" : "#f5f2e9";
     const select = document.querySelector("#theme");
     if (select) select.value = preference;
   }
