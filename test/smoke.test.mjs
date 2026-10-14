@@ -18,6 +18,7 @@ test("ESM and CommonJS entry points expose the same core API", () => {
     assert.equal(typeof api.rollCharacter, "function");
     assert.equal(typeof api.toNodeSource, "function");
     assert.equal(typeof api.frameAt, "function");
+    assert.equal(typeof api.deriveChildCharacters, "function");
   }
 });
 
@@ -112,6 +113,21 @@ test("named presets are immutable and can be selected in the CLI", () => {
   assert.equal(JSON.parse(selected.stdout).name, esm.createPresetCharacter("kitty").name);
   assert.equal(JSON.parse(selected.stdout).nameMode, "auto");
   const invalid = spawnSync(process.execPath, [cli, "roll", "--preset", "unknown"], { encoding: "utf8" });
+  assert.equal(invalid.status, 2);
+});
+
+test("CLI generates stable project thread faces", () => {
+  const cli = fileURLToPath(new URL("../dist/cli.js", import.meta.url));
+  const args = ["children", "--preset", "kitty", "--seed", "my-project", "--count", "5", "--format", "json"];
+  const batch = spawnSync(process.execPath, [cli, ...args], { encoding: "utf8" });
+  assert.equal(batch.status, 0, batch.stderr);
+  const parsed = JSON.parse(batch.stdout);
+  assert.equal(parsed.children.length, 5);
+  assert.equal(new Set(parsed.children.map(c => c.character.animations.idle.still)).size, 5);
+  const single = spawnSync(process.execPath, [cli, "children", "--preset", "kitty", "--seed", "my-project", "--index", "2", "--format", "json"], { encoding: "utf8" });
+  assert.equal(single.status, 0, single.stderr);
+  assert.deepEqual(JSON.parse(single.stdout).children[0], parsed.children[2]);
+  const invalid = spawnSync(process.execPath, [cli, "children", "--preset", "teddy", "--count", "16"], { encoding: "utf8" });
   assert.equal(invalid.status, 2);
 });
 

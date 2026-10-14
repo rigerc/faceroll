@@ -115,6 +115,16 @@ test("packaged frontend module graph resolves without Node-only imports", async 
   assert.ok(seen.size >= 4);
 });
 
+test("playground build contains the family preview and stable slot controls", async () => {
+  const html = await readFile(new URL("../playground-dist/index.html", import.meta.url), "utf8");
+  const app = await readFile(new URL("../playground-dist/app.js", import.meta.url), "utf8");
+  assert.match(html, /id="family-children"/);
+  assert.match(html, /id="family-seed"/);
+  assert.match(html, /id="family-count"/);
+  assert.match(app, /deriveChildCharacters/);
+  assert.match(app, /Thread slot/);
+});
+
 test("static hosts keep a 404 page and header rules in the build output", async () => {
   const root = new URL("../playground-dist/", import.meta.url);
   const notFound = await readFile(new URL("404.html", root), "utf8");

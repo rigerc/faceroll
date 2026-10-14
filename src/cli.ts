@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createCharacter, listParts, rollCharacter, type Character } from "./character";
+import { deriveChildCharacter, deriveChildCharacters } from "./children";
 import { FACE_PRESETS, getFacePreset } from "./presets";
 import type { Parts } from "./parts";
 import { serialize, toMarkdown, toNodeSource, toSystemPrompt } from "./export";
@@ -12,6 +13,7 @@ const HELP = `faceroll: random animated ASCII faces for AI agents
 Usage
   faceroll roll [options]            Print a rolled character
   faceroll play <state> [options]    Animate one state in the terminal
+  faceroll children [options]        Derive thread faces from one parent
   faceroll states                    List the states and emotions
   faceroll parts                     List body, eyes and mouth ids
   faceroll presets                   Browse 24 named faces
@@ -26,6 +28,9 @@ Options
   --mouth <id>       Lock the mouth
   --format <text|prompt|markdown|json|node>   For roll (default text)
   --duration <ms>    For play (default 4000)
+  --count <n>        Children to generate (default 5)
+  --index <n>        Derive one child at a stable zero-based slot
+  --format <text|json>  For children (default text)
   -h, --help
 `;
 
@@ -108,6 +113,29 @@ async function main(): Promise<void> {
         : format === "node" ? toNodeSource(c)
         : describe(c);
       process.stdout.write(out + "\n");
+      return;
+    }
+    case "children": {
+      const format = flags["format"] ?? "text";
+      if (!["text", "json"].includes(format)) throw new UsageError("Children support --format text or json");
+      if (flags["index"] !== undefined && flags["count"] !== undefined) {
+        throw new UsageError("Use either --index or --count, not both");
+      }
+      const parent = roll(flags);
+      const seed = flags["seed"] ?? parent.seed;
+      try {
+        const children = flags["index"] !== undefined
+          ? [deriveChildCharacter(parent, { index: Number(flags["index"]), ...(seed !== undefined ? { seed } : {}) })]
+          : deriveChildCharacters(parent, { count: Number(flags["count"] ?? "5"), ...(seed !== undefined ? { seed } : {}) });
+        const start = flags["index"] !== undefined ? Number(flags["index"]) : 0;
+        const out = format === "json"
+          ? JSON.stringify({ parent: serialize(parent), children: children.map((character, i) => ({ index: start + i, character: serialize(character) })) }, null, 2)
+          : [`Parent  ${parent.animations.idle.still}  ${parent.name}`, ...children.map((c, i) => `Thread ${start + i}  ${c.animations.idle.still}  ${c.name}`)].join("\n");
+        process.stdout.write(out + "\n");
+      } catch (e) {
+        if (e instanceof RangeError) throw new UsageError(e.message);
+        throw e;
+      }
       return;
     }
     case "play": {

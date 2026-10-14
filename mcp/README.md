@@ -120,6 +120,8 @@ and [CLI testing guide](https://github.com/modelcontextprotocol/inspector/blob/m
 | `list_states` | None | All nine states and emotions with usage guidance |
 | `roll_character` | Optional `name`, `seed`, `vibe`, `preset`, `lock` | Serialized character with all animations |
 | `reroll_part` | `parts`, `kind`; optional `name`, `seed`, `vibe` | Character with only the selected part replaced |
+| `derive_child` | Parent `parts`, zero-based `index`; optional `seed`, `name` | One stable child character snapshot for a saved thread slot |
+| `derive_children` | Parent `parts`, `count` (0–20); optional `seed` | Distinct child snapshots, in thread slot order |
 | `get_animation` | `parts`, `state` | Still face, `{ text, ms }` frames, duration and width |
 | `export_character` | `parts`, `format`; optional `name`, `seed` | Text in `prompt`, `markdown`, `json` or `node` format |
 
@@ -174,3 +176,15 @@ Characters receive a unique, reproducible human name for their selected parts wh
 (`"auto"` or `"custom"`) with a returned snapshot when rerolling or exporting it:
 automatic names follow new parts, while custom names stay fixed. Older saved
 snapshots without a mode preserve their supplied nonblank names as custom.
+
+### Parent/child thread faces
+
+Use `derive_children` to create a preview family from project parent parts,
+then `derive_child` to recreate an individual thread's face later. Provide the
+same `seed` and permanently allocated zero-based `index`; thread allocation and
+persistence belong to the MCP client. Changing count does not rearrange
+previously allocated slots. All children retain their parent's body and have
+all nine animations, and no two siblings share the same rendered idle face.
+The batch tool caps responses at 20 children to keep MCP payloads manageable;
+`derive_child` can address any available slot. Bear parents support 15
+visually unique children; other bodies support 239 with the current catalog.

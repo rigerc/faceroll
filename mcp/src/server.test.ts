@@ -7,7 +7,7 @@ import { spawn } from "node:child_process";
 import { get } from "node:http";
 import {
   FACE_PRESETS, STATES, STATE_NAMES, listParts, rollCharacter, serialize,
-  createCharacter, toSystemPrompt, toMarkdown, toNodeSource,
+  createCharacter, deriveChildCharacter, deriveChildCharacters, toSystemPrompt, toMarkdown, toNodeSource,
 } from "faceroll";
 import { createApp } from "./app.ts";
 import { createFacerollServer } from "./server.ts";
@@ -57,7 +57,7 @@ describe.each(["memory", "http"] as const)("Faceroll tools over %s", (transport)
     const client = await setupClient(transport);
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual([
-      "export_character", "get_animation", "list_parts", "list_presets", "list_states", "reroll_part", "roll_character",
+      "derive_child", "derive_children", "export_character", "get_animation", "list_parts", "list_presets", "list_states", "reroll_part", "roll_character",
     ]);
     for (const tool of tools) {
       expect(tool.outputSchema?.type).toBe("object");
@@ -124,6 +124,19 @@ describe.each(["memory", "http"] as const)("Faceroll tools over %s", (transport)
     expect(result.structuredContent).toEqual(serialize(character));
     expect(character.parts.mouth).toBe("w");
     expect(character.animations.idle.still).toBe("ʕ•ᴥ•ʔ");
+  });
+
+  it("derives stable and visibly distinct thread children", async () => {
+    const client = await setupClient(transport);
+    const argumentsBase = { parts, seed: "project", count: 5 };
+    const batch = await client.callTool({ name: "derive_children", arguments: argumentsBase });
+    const expected = deriveChildCharacters(createCharacter(parts), { count: 5, seed: "project" }).map(serialize);
+    expect(batch.structuredContent).toEqual({ children: expected });
+    const child = await client.callTool({ name: "derive_child", arguments: { parts, seed: "project", index: 3 } });
+    expect(child.structuredContent).toEqual(serialize(deriveChildCharacter(createCharacter(parts), { seed: "project", index: 3 })));
+    expect((child.structuredContent as { parts: typeof parts }).parts).toEqual(expected[3]?.parts);
+    const invalid = await client.callTool({ name: "derive_children", arguments: { parts, count: 21 } });
+    expect(invalid.isError).toBe(true);
   });
 
   it("returns each animation with the original timing and width", async () => {
@@ -201,7 +214,7 @@ it("connects to the built stdio executable without polluting stdout", async () =
   });
   cleanups.push(() => client.close());
   await client.connect(transport);
-  expect((await client.listTools()).tools).toHaveLength(7);
+  expect((await client.listTools()).tools).toHaveLength(9);
   expect((await client.callTool({ name: "roll_character", arguments: { preset: "kitty" } })).structuredContent)
     .toEqual(serialize(createCharacter({ body: "cat", eyes: "cat", mouth: "cat" })));
 });
