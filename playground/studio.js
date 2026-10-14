@@ -1,0 +1,82 @@
+// Presentation only: reuse the playground's existing stateful controls and listeners.
+(() => {
+  const $ = s => document.querySelector(s);
+  const workspace = $(".workspace");
+  const editor = $(".editor-panel");
+  const preview = $(".preview-panel");
+  const moods = $(".mood-area");
+  const exportPanel = $(".export-section");
+  const inspector = document.createElement("aside");
+  inspector.className = "inspector-panel";
+  inspector.setAttribute("aria-label", "Expressions and export");
+  inspector.append(moods, exportPanel);
+  workspace.prepend(editor);
+  workspace.append(inspector);
+
+  const brand = $(".brand");
+  brand.innerHTML = '<img class="studio-brand-icon" src="./assets/faceroll-icon.svg" alt="" width="36" height="36"><span class="studio-wordmark">facer<span>roll</span></span><span class="version">PLAYGROUND</span>';
+
+  const nav = document.createElement("nav");
+  nav.className = "studio-nav";
+  nav.setAttribute("aria-label", "Playground sections");
+  nav.innerHTML = '<a href="#workspace" aria-current="page">Studio</a><a href="#family-title">Family</a><a href="#gallery-title">Presets</a>';
+  $(".header-actions").prepend(nav);
+  $("#title").textContent = "Faceroll Studio";
+  $(".subtitle").textContent = "Roll a character. Edit the parts. Preview every expression.";
+  $("#editor-title").textContent = "Character";
+  $(".preview-panel .panel-bar h2").textContent = "Live preview";
+
+  // The original app owns all nine mood buttons, animation playback, editor,
+  // family generation, exports, storage and reduced-motion behavior.
+  const mobile = matchMedia("(max-width: 760px)");
+  const dock = document.createElement("nav");
+  dock.className = "mobile-dock";
+  dock.setAttribute("aria-label", "Mobile workspaces");
+  const tabs = [
+    ["edit", "Edit", '<path d="m12 20 9-9-4-4-9 9-1 5 5-1Z"/><path d="m15 9 4 4"/>'],
+    ["frames", "Frames", '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3V9Z"/>'],
+    ["presets", "Presets", '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'],
+    ["family", "Family", '<circle cx="12" cy="7" r="3"/><path d="M5 21v-2a7 7 0 0 1 14 0v2M3 10a3 3 0 0 0-2 5m20-5a3 3 0 0 1 2 5"/>'],
+    ["export", "Export", '<path d="M12 3v12m-4-4 4 4 4-4M4 17v4h16v-4"/>']
+  ];
+  for (const [key, label, paths] of tabs) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.panel = key;
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">' + paths + "</svg><span>" + label + "</span>";
+    button.setAttribute("aria-label", "Show " + label.toLowerCase());
+    button.addEventListener("click", () => activate(key));
+    dock.append(button);
+  }
+  const fab = document.createElement("button");
+  fab.type = "button";
+  fab.className = "mobile-roll";
+  fab.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 5 5-5 5M3 18h4c6 0 7-10 13-10h1M16 13l5 5-5 5M3 6h4c2 0 4 2 5 4"/></svg><span>Roll face</span>';
+  fab.addEventListener("click", () => $("#roll").click());
+  document.body.append(dock, fab);
+  const views = {edit: editor, frames: $(".timeline-section"), presets: $(".gallery-section"), family: $(".family-section"), export: exportPanel};
+  function activate(key) {
+    document.body.dataset.mobilePanel = key;
+    for (const button of dock.querySelectorAll("button")) {
+      button.setAttribute("aria-pressed", String(button.dataset.panel === key));
+    }
+    for (const [name, panel] of Object.entries(views)) {
+      panel.setAttribute("aria-hidden", String(mobile.matches && name !== key));
+      if ("inert" in panel) panel.inert = mobile.matches && name !== key;
+    }
+  }
+  function arrange() {
+    if (mobile.matches) {
+      preview.append(moods);
+    } else {
+      inspector.prepend(moods);
+    }
+    activate(document.body.dataset.mobilePanel || "edit");
+  }
+  mobile.addEventListener("change", arrange);
+  arrange();
+  // Make disabled roll state visible on the persistent mobile action.
+  const syncRoll = () => { fab.disabled = $("#roll").disabled; };
+  new MutationObserver(syncRoll).observe($("#roll"), {attributes:true,attributeFilter:["disabled"]});
+  syncRoll();
+})();
