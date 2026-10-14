@@ -3,6 +3,7 @@ import { Effect, Schema } from "effect";
 import {
   FACE_PRESETS, STATES, STATE_NAMES, PART_KINDS,
   createCharacter, getFacePreset, listParts, partPool, rollCharacter, rerollPart,
+  deriveChildCharacter, deriveChildCharacters,
   serialize, toMarkdown, toNodeSource, toSystemPrompt,
   type Character, type RollOptions,
 } from "faceroll";
@@ -133,6 +134,39 @@ export function registerTools(server: McpServer): void {
       ...(args.vibe !== undefined ? { vibe: args.vibe } : {}),
     },
   ))));
+
+  server.registerTool("derive_child", {
+    title: "Derive one stable thread face",
+    description: "Return the child at a zero-based thread slot for a given project parent. The same parent parts, optional family seed and index always give the same distinct visual face. Store the slot for stable identity.",
+    inputSchema: toMcpSchema(Schema.Struct({
+      parts: Parts, index: Schema.Number, seed: Schema.optional(Seed),
+      name: Schema.optional(Schema.String),
+    })),
+    outputSchema: toMcpSchema(CharacterOutput),
+    annotations,
+  }, (args) => execute(() => serialize(deriveChildCharacter(createCharacter(args.parts), {
+    index: args.index,
+    ...(args.seed !== undefined ? { seed: args.seed } : {}),
+    ...(args.name !== undefined ? { name: args.name } : {}),
+  }))));
+
+  server.registerTool("derive_children", {
+    title: "Derive a family of thread faces",
+    description: "Generate visibly distinct thread children from parent parts while keeping the body. First slots remain stable when more threads are added. At most 20 at once; use derive_child for any specific slot.",
+    inputSchema: toMcpSchema(Schema.Struct({
+      parts: Parts, count: Schema.Number, seed: Schema.optional(Seed),
+    })),
+    outputSchema: toMcpSchema(Schema.Struct({ children: Schema.Array(CharacterOutput) })),
+    annotations,
+  }, (args) => execute(() => {
+    if (!Number.isSafeInteger(args.count) || args.count < 0 || args.count > 20) {
+      throw new RangeError("count must be an integer between 0 and 20");
+    }
+    return { children: deriveChildCharacters(createCharacter(args.parts), {
+      count: args.count,
+      ...(args.seed !== undefined ? { seed: args.seed } : {}),
+    }).map(serialize) };
+  }));
 
   server.registerTool("get_animation", {
     title: "Get an animation",
