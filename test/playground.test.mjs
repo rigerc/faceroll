@@ -155,6 +155,13 @@ test("preview server serves the built playground and rejects traversal and write
   assert.equal(page.status, 200);
   assert.match(await page.text(), /Kaomoji playground/);
   assert.match((await fetch(`${origin}/app.js`)).headers.get("content-type"), /javascript/);
+  // The server sends nosniff, so an asset served as octet-stream is refused by the browser's
+  // decoder rather than sniffed: a brand SVG in <img> then fails silently at naturalWidth 0.
+  for (const [path, type] of [["/assets/faceroll-icon.svg", /image\/svg\+xml/], ["/assets/favicon-32.png", /image\/png/], ["/assets/pattern-cream.webp", /image\/webp/], ["/assets/fonts/quicksand-latin.woff2", /font\/woff2/]]) {
+    const asset = await fetch(`${origin}${path}`);
+    assert.equal(asset.status, 200, `Missing asset: ${path}`);
+    assert.match(asset.headers.get("content-type"), type, `Wrong content type for ${path}`);
+  }
   assert.equal((await fetch(`${origin}/lib/index.js`)).status, 200);
   assert.equal((await fetch(`${origin}/missing`)).status, 404);
   assert.equal((await fetch(`${origin}/%2e%2e%2fpackage.json`)).status, 403);

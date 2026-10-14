@@ -6,7 +6,23 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("../playground-dist/", import.meta.url));
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "127.0.0.1";
-const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".map": "application/json" };
+// Every extension the playground actually ships. Images and fonts must be listed too: this
+// server sends `X-Content-Type-Options: nosniff`, so an unlisted asset falls back to
+// application/octet-stream and the browser refuses to decode it — a brand SVG in <img> then
+// loads without error but reports naturalWidth 0, so the logo silently disappears.
+const types = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".map": "application/json",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".woff2": "font/woff2",
+  ".txt": "text/plain; charset=utf-8"
+};
 const server = createServer(async (request, response) => {
   if (!["GET", "HEAD"].includes(request.method)) {
     response.writeHead(405, { Allow: "GET, HEAD" });
