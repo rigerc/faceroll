@@ -72,7 +72,10 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run typecheck && npm test && npm run build",
     "build:fallback": "node scripts/build-fallback.mjs",
-    "test:smoke": "node --test test/smoke.test.mjs"
+    "test:smoke": "node --test test/smoke.test.mjs",
+    "playground": "npm run build:playground && node scripts/serve-playground.mjs",
+    "build:playground": "npm run build && node scripts/build-playground.mjs",
+    "test:playground": "node --test test/playground.test.mjs"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",

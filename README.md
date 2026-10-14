@@ -271,6 +271,30 @@ The emitted file defines a `play(state)` function that returns a stop function.
 It includes all nine animations as `[face, ms]` tuples and requires no package.
 Use `faceroll roll --format node` to generate the same output from the CLI.
 
+### Playground
+
+```sh
+npm ci
+npm run playground
+```
+
+Open **http://127.0.0.1:4173** to explore the interactive playground. Pick from
+24 presets, search and filter styles, customize body/eyes/mouth, lock parts for
+random rolls, and undo selections. Preview all nine moods, change playback speed,
+pause or inspect individual frames, and copy a face or export the character as
+a system prompt, JSON, Markdown, or standalone Node.js source.
+
+Your character configuration stays in localStorage when available. Reduced-motion
+preferences pause animations; playback can be enabled explicitly. The playground
+uses the real library build and has no frontend runtime dependencies.
+
+`npm run build:playground` creates a self-contained static site in
+`playground-dist/`, ready to serve at a root URL or under a subdirectory.
+Set `PORT` or `HOST` to override the development server defaults. After building,
+`node scripts/serve-playground.mjs` serves without rebuilding. Source lives in
+`playground/`; run `npm run test:playground` after building to check its model,
+packaging, and preview server.
+
 ### Browser example
 
 Run `npm run build`, serve the **project root** over HTTP (not `file://`),
