@@ -3,8 +3,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
-import { createFaceroll, FACE_PRESETS, nameForParts } from "../dist/index.js";
+import { createFaceroll, childCapacity, createCharacter, FACE_PRESETS, nameForParts } from "../dist/index.js";
 import { restoreEditor, createHistory, filterPresets, exportFilename } from "../playground-dist/model.js";
+import { createFamily } from "../playground-dist/family.js";
+import { Window } from "happy-dom";
 
 test("restores valid configuration and recovers from corrupt or inaccessible storage", () => {
   const config = createFaceroll({ name: "Nova", vibe: "cool", parts: { body: "bot" }, locks: { eyes: true } }).getConfig();
@@ -119,11 +121,81 @@ test("packaged frontend module graph resolves without Node-only imports", async 
 test("playground build contains the family preview and stable slot controls", async () => {
   const html = await readFile(new URL("../playground-dist/index.html", import.meta.url), "utf8");
   const app = await readFile(new URL("../playground-dist/app.js", import.meta.url), "utf8");
+  const family = await readFile(new URL("../playground-dist/family.js", import.meta.url), "utf8");
   assert.match(html, /id="family-children"/);
   assert.match(html, /id="family-seed"/);
   assert.match(html, /id="family-count"/);
-  assert.match(app, /deriveChildCharacters/);
-  assert.match(app, /Thread slot/);
+  assert.match(app, /createFamily/);
+  assert.match(family, /deriveChildCharacters/);
+  assert.match(family, /Thread slot/);
+});
+
+async function familyFixture(t, storage) {
+  const window = new Window();
+  t.after(() => window.close());
+  const html = await readFile(new URL("../playground-dist/index.html", import.meta.url), "utf8");
+  window.document.body.innerHTML = html.match(/<body>([\s\S]*)<\/body>/)[1];
+  const editor = createFaceroll({ seed: "family-test", parts: { body: "round" } });
+  const copied = [];
+  const family = createFamily({ editor, root: window.document, storage, copy: text => copied.push(text) });
+  const $ = selector => window.document.querySelector(selector);
+  const input = (id, value) => { $(id).value = value; $(id).dispatchEvent(new window.Event("input")); };
+  family.render();
+  return { family, editor, copied, $, input, window };
+}
+
+test("family UI preserves slots when growing, renaming and changing moods, and copies current data", async t => {
+  const { family, editor, copied, $, input } = await familyFixture(t);
+  const first = family.exportData();
+  input("#family-count", "8");
+  assert.deepEqual(family.exportData().children.slice(0, 5), first.children);
+  assert.equal($("#family-children").children.length, 8);
+  input("#family-seed", "another-project");
+  const changed = family.exportData();
+  assert.notDeepEqual(changed.children.slice(0, 5).map(x => x.parts), first.children.map(x => x.parts));
+  editor.setName("Project Nova");
+  family.render("happy");
+  assert.equal($("#family-parent-name").textContent, "Project Nova");
+  assert.deepEqual(family.exportData().children, changed.children);
+  const child = createCharacter(changed.children[0].parts);
+  assert.equal($(".family-face").textContent, child.animations.happy.still);
+  $(".family-actions button").click();
+  assert.equal(copied.pop(), child.animations.happy.still);
+  $(".family-actions button:last-child").click();
+  const childJSON = JSON.parse(copied.pop());
+  assert.equal(childJSON.index, 0);
+  assert.deepEqual(childJSON.character.parts, child.parts);
+  $("#copy-family").click();
+  assert.deepEqual(JSON.parse(copied.pop()), family.exportData());
+});
+
+test("family UI restores settings, clamps to parent capacity and tolerates empty count and blocked storage", async t => {
+  let saved = JSON.stringify({ seed: "saved-project", count: 20 });
+  const storage = { getItem: () => saved, setItem: (_, value) => { saved = value; } };
+  const { family, editor, $, input, window } = await familyFixture(t, storage);
+  assert.equal($("#family-seed").value, "saved-project");
+  assert.equal(family.exportData().children.length, 20);
+  editor.setParts({ body: "bear" });
+  family.render();
+  const capacity = childCapacity(editor.getCharacter());
+  assert.equal(Number($("#family-count").max), capacity);
+  assert.equal(family.exportData().children.length, capacity);
+  input("#family-count", "");
+  assert.equal($("#family-count").value, "");
+  assert.equal(family.exportData().children.length, capacity);
+  $("#family-count").dispatchEvent(new window.Event("change"));
+  assert.equal($("#family-count").value, String(capacity));
+  input("#family-count", "-2");
+  assert.equal(family.exportData().children.length, 1);
+  assert.equal(JSON.parse(saved).count, 1);
+  for (const storage of [
+    { getItem: () => "{bad", setItem() { throw new Error("blocked"); } },
+    { getItem() { throw new Error("blocked"); }, setItem() { throw new Error("blocked"); } },
+  ]) {
+    const fixture = await familyFixture(t, storage);
+    fixture.input("#family-seed", "works-without-storage");
+    assert.equal(fixture.family.exportData().children.length, 5);
+  }
 });
 
 test("static hosts keep a 404 page and header rules in the build output", async () => {
@@ -174,23 +246,19 @@ test("preview server serves the built playground and rejects traversal and write
 
 
 
-test("Studio ships both themes, brand vectors and compact mobile workspaces", async () => {
+test("redesigned playground ships themes, brand assets, live dock and family without the Studio overlay", async () => {
   const root = new URL("../playground-dist/", import.meta.url);
   const html = await readFile(new URL("index.html", root), "utf8");
-  const studio = await readFile(new URL("studio.js", root), "utf8");
-  const css = await readFile(new URL("studio.css", root), "utf8");
+  const app = await readFile(new URL("app.js", root), "utf8");
+  const css = await readFile(new URL("style.css", root), "utf8");
   for (const hook of ["face", "roll", "parts", "states", "family-children", "output", "theme"]) {
     assert.match(html, new RegExp('id="' + hook + '"'));
   }
-  assert.match(html, /href="\.\/studio\.css"/);
-  assert.match(html, /src="\.\/studio\.js"/);
-  assert.match(studio, /family-peek-faces/);
-  assert.match(studio, /mobile-dock/);
-  assert.match(studio, /dataset\.panel/);
-  assert.match(studio, /derive|familyGrid/);
+  assert.doesNotMatch(html, /studio\.(css|js)/);
+  assert.match(html, /class="dock-preview"/);
+  assert.match(app, /family\.render\(state\)/);
   assert.match(css, /data-theme="dark"/);
-  assert.match(css, /data-mobile-panel="family"/);
-  for (const name of ["faceroll-icon.svg", "faceroll-emoticon-color.svg", "faceroll-emoticon-reversed.svg"]) {
+  for (const name of ["logo-color.svg", "logo-reversed.svg"]) {
     assert.match(await readFile(new URL("assets/" + name, root), "utf8"), /<svg/);
   }
 });

@@ -2,26 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Customize a kaomoji, preview its expressions, and export it with Faceroll.">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Faceroll">
   <meta property="og:title" content="Faceroll — Kaomoji playground">
   <meta property="og:description" content="Customize a kaomoji, preview its expressions, and export it with Faceroll.">
   <meta name="twitter:card" content="summary">
-  <meta name="theme-color" content="#f8faf7">
+  <meta name="theme-color" content="#FFFBF4">
   <title>Faceroll — Kaomoji playground</title>
-  <link rel="icon" type="image/svg+xml" href="./assets/faceroll-icon.svg">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="./assets/favicon-180.png">
+  <link rel="preload" href="./assets/fonts/quicksand-latin.woff2" as="font" type="font/woff2" crossorigin>
   <script src="./theme.js"></script>
   <link rel="stylesheet" href="./style.css">
-  <link rel="stylesheet" href="./studio.css">
   <script type="module" src="./app.js"></script>
-  <script type="module" src="./studio.js"></script>
 </head>
 <body>
   <a class="skip" href="#workspace">Skip to playground</a>
   <header class="topbar">
-    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">(•ω•)</span> faceroll<span class="version">playground</span></a>
+    <a class="brand" href="./">
+      <img class="logo logo-on-light" src="./assets/logo-color.svg" alt="Faceroll" width="214" height="44">
+      <img class="logo logo-on-dark" src="./assets/logo-reversed.svg" alt="Faceroll" width="214" height="44">
+      <span class="version">playground</span>
+    </a>
     <div class="header-actions">
       <label class="theme-control"><span>Theme</span><select id="theme" disabled><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
       <a class="source-link" aria-label="GitHub" href="https://github.com/rigerc/faceroll" target="_blank" rel="noreferrer"><span>GitHub</span> <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
@@ -29,48 +34,133 @@
   </header>
   <main>
     <section class="intro" aria-labelledby="title">
-      <div><h1 id="title">Kaomoji playground</h1><p class="subtitle">Meet a named face, edit its parts, and preview each expression.</p></div>
+      <h1 id="title">Kaomoji playground</h1>
+      <p class="subtitle">Meet a named face, edit its parts, and preview each expression.</p>
+      <nav class="section-links" aria-label="Playground sections">
+        <a href="#workspace">Playground</a><a href="#gallery-title">Presets</a><a href="#family-title">Family</a><a href="#export-title">Export</a>
+      </nav>
     </section>
-    <section id="workspace" class="workspace" aria-label="Character playground">
-      <div class="preview-panel">
-        <div class="panel-bar"><h2>Preview</h2><span id="motion-status" class="badge">Animating</span></div>
-        <div class="stage"><div class="stage-caption" id="character-caption">Character</div><div class="face-wrap"><span id="face" class="face" role="img" aria-label="Character preview"></span></div><p class="state-say"><span class="sample-label">Example:</span> <span id="state-say"></span></p><button id="copy-face" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy face</button></div>
-        <div class="playback"><button id="play" class="small-button" aria-pressed="true">Pause</button><label class="speed-label">Speed <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label><span id="animation-info" class="muted"></span></div>
-        <div class="mood-area"><div class="mood-heading"><h3>Moods</h3><button id="cycle-moods" class="small-button" type="button" aria-pressed="false" title="Play one animation loop per mood, then move to the next">Cycle moods</button></div><div id="states" class="states" role="group" aria-label="Animation state"></div></div>
+
+    <section id="workspace" class="workspace" aria-label="Character playground" tabindex="-1">
+      <div class="stage-panel">
+        <h2 class="sr-only">Preview</h2>
+        <div class="stage-top">
+          <p class="stage-name" id="character-caption">Character</p>
+          <div class="stage-top-actions">
+            <span id="motion-status" class="status" data-on="true">Animating</span>
+            <button id="copy-face" class="pill-button" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy face</button>
+          </div>
+        </div>
+
+        <div class="face-wrap" id="face-wrap">
+          <div class="face-row" id="face-row">
+            <svg class="trail" viewBox="-180 0 170 119" aria-hidden="true" focusable="false">
+              <path d="M-85 15H-28"/><path d="M-100 47H-40"/><path d="M-150 78H-40"/><path d="M-105 104H-15"/><circle cx="-172" cy="78" r="7"/>
+            </svg>
+            <span id="face" class="face" role="img" aria-label="Character preview"></span>
+          </div>
+        </div>
+        <p class="state-say"><span class="sample-label">Example:</span> <span id="state-say"></span></p>
+
+        <div class="stage-controls">
+          <div class="mood-row">
+            <h3 class="sr-only">Moods</h3>
+            <div id="states" class="states" role="group" aria-label="Animation state"></div>
+          </div>
+          <div class="playback">
+            <button id="play" class="pill-button play-button" type="button" aria-pressed="true">Pause</button>
+            <label class="speed-label"><span>Speed</span> <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></label>
+            <button id="cycle-moods" class="pill-button" type="button" aria-pressed="false" title="Play one animation loop per mood, then move to the next">Cycle moods</button>
+          </div>
+        </div>
+
+        <div class="film" aria-labelledby="timeline-title">
+          <div class="film-head"><h2 id="timeline-title">Frames</h2><p class="film-meta"><span class="film-hint">Select a frame to pause on it.</span><span id="animation-info"></span></p></div>
+          <div id="frames" class="frames" role="group" aria-label="Animation frames"></div>
+        </div>
       </div>
+
       <aside class="editor-panel" aria-labelledby="editor-title">
-        <div class="panel-bar"><h2 id="editor-title">Character</h2><button id="undo" class="text-button" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12"/></svg>Undo</button></div>
-        <label class="field"><span class="name-heading">Character name<span id="name-mode" class="badge">Automatic</span></span><input id="name" maxlength="40" placeholder="Automatic name" autocomplete="off" aria-describedby="name-hint"></label>
-        <div class="name-controls"><p id="name-hint" class="name-hint">This name follows the face. Type your own to keep it.</p><button id="auto-name" class="text-button" type="button" disabled>Use automatic name</button></div>
-        <label class="field">Roll style<select id="vibe"><option value="any">Any</option><option value="cute">Cute</option><option value="cool">Cool</option><option value="weird">Weird</option></select></label>
-        <div class="divider"></div>
-        <p class="editor-hint">Lock a part to keep it when rolling.</p>
-        <div id="parts" class="parts"></div>
-        <p id="mouth-note" class="muted mouth-note" hidden>Bear bodies use the bear mouth in calm expressions.</p>
-        <button id="roll" class="primary-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 2 4 4-4 4M2 18h2.5c6 0 9-12 15-12H22m-4 8 4 4-4 4M2 6h2.5c2.2 0 4 1.6 5.5 4m4 4c1.5 2.4 3.3 4 5.5 4H22"/></svg>Roll face</button>
+        <div class="deck-head">
+          <h2 id="editor-title">Edit character</h2>
+          <button id="undo" class="text-button" type="button" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12"/></svg>Undo</button>
+        </div>
+        <div class="deck-grid">
+          <div class="reels-col">
+            <p class="editor-hint">Lock a part to keep it when rolling.</p>
+            <div id="parts" class="parts"></div>
+            <p id="mouth-note" class="muted mouth-note" hidden>Bear bodies use the bear mouth in calm expressions.</p>
+          </div>
+          <div class="identity-col">
+            <label class="field"><span class="name-heading">Character name<span id="name-mode" class="badge">Automatic</span></span><input id="name" maxlength="40" placeholder="Automatic name" autocomplete="off" aria-describedby="name-hint"></label>
+            <div class="name-controls"><p id="name-hint" class="name-hint">This name follows the face. Type your own to keep it.</p><button id="auto-name" class="text-button" type="button" disabled>Use automatic name</button></div>
+            <label class="field">Roll style<select id="vibe"><option value="any">Any</option><option value="cute">Cute</option><option value="cool">Cool</option><option value="weird">Weird</option></select></label>
+            <button id="roll" class="primary-button" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5"/><circle cx="8.5" cy="8.5" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="15.5" cy="15.5" r=".6"/></svg>Roll face</button>
+          </div>
+        </div>
       </aside>
     </section>
-    <section class="timeline-section" aria-labelledby="timeline-title"><div class="section-heading"><h2 id="timeline-title">Frames</h2><p>Select a frame to pause on it.</p></div><div id="frames" class="frames" role="group" aria-label="Animation frames"></div></section>
-    <section class="family-section" aria-labelledby="family-title">
-      <div class="section-heading"><div><h2 id="family-title">Thread family</h2><p>Use this character as a project parent. Each thread gets a stable, related face.</p></div><button id="copy-family" class="small-button" type="button">Copy family JSON</button></div>
-      <div class="family-controls">
-        <label>Project / family seed <input id="family-seed" type="text" maxlength="100" value="my-project" autocomplete="off" aria-describedby="family-hint"></label>
-        <label>Threads <input id="family-count" type="number" min="1" max="20" step="1" value="5"></label>
-        <p id="family-hint" class="muted">Save the seed and each thread's zero-based slot. Adding threads never changes earlier slots.</p>
-      </div>
-      <div class="family-parent" id="family-parent"></div>
-      <div id="family-children" class="family-grid" aria-live="polite"></div>
-    </section>
+
     <section class="gallery-section" aria-labelledby="gallery-title">
-      <div class="section-heading"><div><h2 id="gallery-title">Presets <span id="preset-count" class="count"></span></h2></div><label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search names or presets" aria-label="Search names or presets"></label></div>
-      <div id="filters" class="filters" role="group" aria-label="Filter presets"><button data-filter="any" aria-pressed="true">All faces</button><button data-filter="cute" aria-pressed="false">Cute</button><button data-filter="cool" aria-pressed="false">Cool</button><button data-filter="weird" aria-pressed="false">Weird</button></div>
-      <div id="gallery" class="gallery"></div><p id="empty" class="empty" hidden>No faces found. Try another name or style.</p>
+      <div class="section-heading">
+        <h2 id="gallery-title">Presets <span id="preset-count" class="count"></span></h2>
+        <label class="search-label"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="7.5"/><path d="m16 16 5 5"/></svg><input id="search" type="search" placeholder="Search names or presets" aria-label="Search names or presets"></label>
+      </div>
+      <div id="filters" class="filters" role="group" aria-label="Filter presets"><button type="button" data-filter="any" aria-pressed="true">All faces</button><button type="button" data-filter="cute" aria-pressed="false">Cute</button><button type="button" data-filter="cool" aria-pressed="false">Cool</button><button type="button" data-filter="weird" aria-pressed="false">Weird</button></div>
+      <div id="gallery" class="gallery"></div>
+      <p id="empty" class="empty" hidden>No faces found. Try another name or style.</p>
+      <button id="show-more" class="pill-button show-more" type="button" aria-expanded="false" hidden></button>
     </section>
-    <section class="export-section" aria-labelledby="export-title"><div class="export-heading"><div><h2 id="export-title">Export character</h2><p class="muted">Copy or download a system prompt, JSON, Markdown, or Node.js source.</p></div><div class="export-actions"><button id="download" class="small-button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5"/></svg>Download</button><button id="copy-export" class="dark-button">Copy export</button></div></div><div class="code-panel"><div id="formats" class="formats" role="group" aria-label="Export format"><button data-format="prompt" aria-pressed="true">System prompt</button><button data-format="json" aria-pressed="false">JSON</button><button data-format="markdown" aria-pressed="false">Markdown</button><button data-format="node" aria-pressed="false">Node.js</button></div><pre id="output" tabindex="0" aria-label="Character export"></pre></div></section>
+
+    <section class="family-section" aria-labelledby="family-title">
+      <div class="section-heading">
+        <div><h2 id="family-title">Thread family</h2><p class="muted">One project parent. A stable, related face for every thread.</p></div>
+        <button id="copy-family" class="pill-button" type="button">Copy family JSON</button>
+      </div>
+      <div class="family-controls">
+        <label class="field">Project / family seed<input id="family-seed" type="text" maxlength="100" value="my-project" autocomplete="off" aria-describedby="family-hint"></label>
+        <label class="field">Threads<input id="family-count" type="number" min="1" max="239" step="1" value="5" aria-describedby="family-status"></label>
+        <p id="family-hint" class="muted">Save the seed and each thread’s zero-based slot. Adding threads keeps the earlier faces.</p>
+      </div>
+      <div id="family-parent" class="family-parent">
+        <span class="family-slot">Project parent</span>
+        <span id="family-parent-face" class="family-parent-face" role="img" aria-label="Project parent"></span>
+        <strong id="family-parent-name"></strong>
+      </div>
+      <p id="family-status" class="muted" role="status" aria-live="polite"></p>
+      <div id="family-children" class="family-grid"></div>
+    </section>
+
+    <section class="export-section" aria-labelledby="export-title">
+      <div class="export-heading">
+        <div><h2 id="export-title">Export character</h2><p class="muted">Copy or download a system prompt, JSON, Markdown, or Node.js source.</p></div>
+        <div class="export-actions">
+          <button id="download" class="pill-button" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5"/></svg>Download</button>
+          <button id="copy-export" class="primary-button compact" type="button">Copy export</button>
+        </div>
+      </div>
+      <div class="code-panel">
+        <div id="formats" class="formats" role="group" aria-label="Export format"><button type="button" data-format="prompt" aria-pressed="true">System prompt</button><button type="button" data-format="json" aria-pressed="false">JSON</button><button type="button" data-format="markdown" aria-pressed="false">Markdown</button><button type="button" data-format="node" aria-pressed="false">Node.js</button></div>
+        <pre id="output" tabindex="0" aria-label="Character export"></pre>
+      </div>
+    </section>
+
     <p id="notice" class="notice" role="status" aria-live="polite"></p>
     <noscript><p>This playground needs JavaScript to generate and animate faces.</p></noscript>
   </main>
-  <footer><span class="brand-text">faceroll <span aria-hidden="true">(˘ω˘)</span></span><span>Built with the Faceroll library.</span></footer>
+  <div id="dock" class="dock" role="region" aria-label="Quick actions" data-visible="false">
+    <div class="dock-info" aria-hidden="true"><span id="dock-face" class="dock-face"></span><span id="dock-name" class="dock-name"></span></div>
+    <a class="dock-preview" href="#workspace">Back to preview</a>
+    <button id="dock-undo" class="dock-undo" type="button" aria-label="Undo" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 4-5 5 5 5M4 9h10a6 6 0 0 1 0 12"/></svg></button>
+    <button id="dock-roll" class="dock-roll" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4.5"/><circle cx="8.5" cy="8.5" r=".6"/><circle cx="12" cy="12" r=".6"/><circle cx="15.5" cy="15.5" r=".6"/></svg>Roll face</button>
+  </div>
+  <footer>
+    <span class="footer-brand">
+      <img class="logo-on-light" src="./assets/mark-color.svg" alt="" width="86" height="22">
+      <img class="logo-on-dark" src="./assets/mark-reversed.svg" alt="" width="86" height="22">
+      Make it easy. Faceroll it.
+    </span>
+    <span>Built with the Faceroll library.</span>
+  </footer>
 </body>
 </html>
-

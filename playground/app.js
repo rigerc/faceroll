@@ -1,11 +1,14 @@
-import { createPlayer, createPresetCharacter, childCapacity, deriveChildCharacters, FACE_PRESETS, serialize, STATES } from "./lib/index.js";
+import { createPlayer, createPresetCharacter, FACE_PRESETS, STATES } from "./lib/index.js";
 import { STORAGE_KEY, TABLES, restoreEditor, createHistory, filterPresets, exportFilename } from "./model.js";
+import { createFamily } from "./family.js";
 
 const $ = selector => document.querySelector(selector);
 const ICON_PATHS = {
   lock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4"/>',
   unlock: '<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0"/>',
   roll: '<path d="m18 2 4 4-4 4M2 18h2.5c6 0 9-12 15-12H22m-4 8 4 4-4 4M2 6h2.5c2.2 0 4 1.6 5.5 4m4 4c1.5 2.4 3.3 4 5.5 4H22"/>',
+  play: '<path d="M8 5.5v13l11-6.5z"/>',
+  pause: '<path d="M8 5v14M16 5v14"/>',
 };
 function icon(name) {
   return `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${ICON_PATHS[name]}</svg>`;
@@ -14,83 +17,7 @@ let storage;
 try { storage = window.localStorage; } catch { /* Restricted storage still permits editing. */ }
 const editor = restoreEditor(storage);
 const history = createHistory(editor);
-const FAMILY_STORAGE_KEY = "faceroll:family:v1";
-let familyKey;
-let familyChildren = [];
-let familyCapacity;
-let familyParentKey;
-try {
-  const saved = JSON.parse(storage?.getItem(FAMILY_STORAGE_KEY) ?? "null");
-  if (saved && typeof saved.seed === "string" && saved.seed.length <= 100 &&
-      Number.isSafeInteger(saved.count) && saved.count >= 1 && saved.count <= 239) {
-    $("#family-seed").value = saved.seed;
-    $("#family-count").value = String(saved.count);
-  }
-} catch { /* Stored settings are optional. */ }
-function saveFamilySettings() {
-  try {
-    storage?.setItem(FAMILY_STORAGE_KEY, JSON.stringify({
-      seed: $("#family-seed").value,
-      count: Number($("#family-count").value),
-    }));
-  } catch { /* Storage may be restricted. */ }
-}
-function renderFamily() {
-  const parent = editor.getCharacter();
-  const parentKey = JSON.stringify(parent.parts);
-  if (familyParentKey !== parentKey) {
-    familyParentKey = parentKey;
-    familyCapacity = childCapacity(parent);
-  }
-  const countInput = $("#family-count");
-  countInput.max = String(familyCapacity);
-  const entered = Number(countInput.value);
-  const count = Math.min(familyCapacity, Math.max(1, Number.isSafeInteger(entered) ? entered : 5));
-  if (countInput.value !== "") countInput.value = String(count);
-  const seed = $("#family-seed").value;
-  const key = JSON.stringify([parent.parts, seed, count]);
-  if (key !== familyKey) {
-    familyKey = key;
-    familyChildren = deriveChildCharacters(parent, { count, seed });
-  }
-  const parentRow = $("#family-parent");
-  parentRow.replaceChildren();
-  parentRow.append("Project parent", Object.assign(document.createElement("strong"), {
-    textContent: parent.animations.idle.still,
-  }), parent.name);
-  const cards = familyChildren.map((child, index) => {
-    const card = document.createElement("article");
-    card.className = "family-card";
-    const slot = document.createElement("span");
-    slot.className = "family-slot";
-    slot.textContent = `Thread slot ${index}`;
-    const face = document.createElement("span");
-    face.className = "family-face";
-    face.textContent = child.animations[state].still;
-    face.setAttribute("role", "img");
-    face.setAttribute("aria-label", `${child.name}, ${state}`);
-    const name = document.createElement("span");
-    name.className = "family-name";
-    name.textContent = child.name;
-    const actions = document.createElement("div");
-    actions.className = "family-actions";
-    const copyFace = document.createElement("button");
-    copyFace.type = "button";
-    copyFace.className = "small-button";
-    copyFace.textContent = "Copy face";
-    copyFace.addEventListener("click", () => copy(child.animations[state].still, `Thread ${index} face copied`));
-    const copyJson = document.createElement("button");
-    copyJson.type = "button";
-    copyJson.className = "small-button";
-    copyJson.textContent = "Copy JSON";
-    copyJson.addEventListener("click", () => copy(JSON.stringify({ index, character: serialize(child) }, null, 2), `Thread ${index} JSON copied`));
-    actions.append(copyFace, copyJson);
-    card.append(slot, face, name, actions);
-    return card;
-  });
-  $("#family-children").replaceChildren(...cards);
-}
-
+const family = createFamily({ editor, storage, copy });
 const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
 let playing = !motion.matches;
 let cycling = false;
@@ -100,6 +27,10 @@ let speed = 1;
 let filter = "any";
 let format = "prompt";
 let noticeTimer;
+let lastParts = "";
+let showAll = false;
+const PREVIEW_COUNT = 6;
+const compact = window.matchMedia("(max-width: 700px)");
 const partControls = {};
 const stateButtons = new Map();
 let frameButtons = [];
@@ -115,6 +46,7 @@ function persist() {
 }
 function showFrame(text, index) {
   $("#face").textContent = text;
+  $("#dock-face").textContent = text;
   frameButtons.forEach((button, i) => button.setAttribute("aria-pressed", String(i === index)));
 }
 const player = createPlayer((frame, index) => showFrame(frame.text, index), {
@@ -123,15 +55,38 @@ const player = createPlayer((frame, index) => showFrame(frame.text, index), {
 });
 
 function updatePlayback() {
-  $("#play").textContent = playing ? "Pause" : "Play";
+  $("#play").innerHTML = `${icon(playing ? "pause" : "play")}${playing ? "Pause" : "Play"}`;
   $("#play").setAttribute("aria-pressed", String(playing));
   $("#cycle-moods").setAttribute("aria-pressed", String(cycling));
   $("#motion-status").textContent = playing ? (cycling ? "Cycling moods" : "Animating") : "Paused";
+  $("#motion-status").dataset.on = String(playing);
 }
 function stopPlayback() {
   player.stop();
   clearTimeout(moodTimer);
   moodTimer = undefined;
+}
+/** Size the face so the widest frame always fits the stage, trail included. */
+const FACE_GLYPH_WIDTH = 0.62;
+const FACE_MAX = 104;
+const FACE_MIN = 18;
+function fitFace() {
+  const wrap = $("#face-wrap");
+  const row = $("#face-row");
+  const chars = Math.max(editor.getAnimation(state).width, 1);
+  const trailShown = getComputedStyle(row.querySelector(".trail")).display !== "none";
+  const available = wrap.clientWidth - 8;
+  const units = chars * FACE_GLYPH_WIDTH + (trailShown ? 1.45 : 0);
+  const size = Math.max(FACE_MIN, Math.min(FACE_MAX, Math.floor(available / units)));
+  row.style.setProperty("--face-size", `${size}px`);
+}
+/** A rolled face streaks in along the trail lines; reduced motion skips it. */
+function streak() {
+  if (motion.matches) return;
+  const row = $("#face-row");
+  row.classList.remove("streak");
+  void row.offsetWidth;
+  row.classList.add("streak");
 }
 function startPlayback() {
   stopPlayback();
@@ -150,9 +105,10 @@ function startPlayback() {
 function renderAnimation() {
   const animation = editor.getAnimation(state);
   $("#face").style.minWidth = `${animation.width}ch`;
+  fitFace();
   $("#face").setAttribute("aria-label", `${editor.getConfig().name || "Character"}, ${state} expression`);
   $("#state-say").textContent = STATES.find(entry => entry.id === state).say;
-  $("#animation-info").textContent = `${animation.frames.length} frames · ${(animation.duration / 1000).toFixed(2)}s loop`;
+  $("#animation-info").textContent = `${animation.frames.length} frames, ${(animation.duration / 1000).toFixed(2)} s loop`;
   stateButtons.forEach((button, id) => button.setAttribute("aria-pressed", String(id === state)));
   frameButtons = animation.frames.map((frame, index) => {
     const button = document.createElement("button");
@@ -163,10 +119,14 @@ function renderAnimation() {
     const face = document.createElement("span");
     face.className = "frame-face";
     face.textContent = frame.text;
+    const meta = document.createElement("span");
+    meta.className = "frame-meta";
+    const number = document.createElement("span");
+    number.textContent = String(index + 1);
     const time = document.createElement("span");
-    time.className = "frame-time";
-    time.textContent = `${index + 1} · ${frame.ms} ms`;
-    button.append(face, time);
+    time.textContent = `${frame.ms} ms`;
+    meta.append(number, time);
+    button.append(face, meta);
     button.addEventListener("click", () => {
       playing = false;
       cycling = false;
@@ -179,13 +139,20 @@ function renderAnimation() {
   $("#frames").replaceChildren(...frameButtons);
   showFrame(animation.still, -1);
   startPlayback();
-  renderFamily();
+  family.render(state);
 }
 
 function renderGallery() {
-  const presets = filterPresets(FACE_PRESETS, filter, $("#search").value);
-  $("#preset-count").textContent = String(presets.length);
-  $("#empty").hidden = presets.length > 0;
+  const matches = filterPresets(FACE_PRESETS, filter, $("#search").value);
+  // Phones show a short list first so the page stays short; searching shows every match.
+  const collapsible = compact.matches && matches.length > PREVIEW_COUNT && !$("#search").value.trim();
+  const presets = collapsible && !showAll ? matches.slice(0, PREVIEW_COUNT) : matches;
+  const more = $("#show-more");
+  more.hidden = !collapsible;
+  more.textContent = showAll ? "Show fewer faces" : `Show all ${matches.length} faces`;
+  more.setAttribute("aria-expanded", String(showAll));
+  $("#preset-count").textContent = String(matches.length);
+  $("#empty").hidden = matches.length > 0;
   const parts = editor.getParts();
   $("#gallery").replaceChildren(...presets.map(preset => {
     const button = document.createElement("button");
@@ -200,10 +167,13 @@ function renderGallery() {
     const name = document.createElement("span");
     name.className = "preset-name";
     name.textContent = character.name;
+    const label = document.createElement("span");
+    label.className = "preset-label";
+    label.textContent = preset.label;
     const vibe = document.createElement("span");
     vibe.className = "preset-vibe";
-    vibe.textContent = `${preset.label} · ${preset.vibe}`;
-    button.append(face, name, vibe);
+    vibe.textContent = preset.vibe[0].toUpperCase() + preset.vibe.slice(1);
+    button.append(face, name, label, vibe);
     button.addEventListener("click", () => {
       history.change(() => editor.applyPreset(preset.id));
       refresh();
@@ -225,14 +195,20 @@ function renderControls() {
     : "Your name stays when the face changes.";
   $("#vibe").value = config.vibe;
   $("#character-caption").textContent = config.name || "Unnamed character";
+  $("#dock-name").textContent = config.name || "Unnamed character";
   $("#undo").disabled = history.length === 0;
-  $("#roll").disabled = Object.values(config.locks).every(Boolean);
+  $("#dock-undo").disabled = history.length === 0;
+  const allLocked = Object.values(config.locks).every(Boolean);
+  $("#roll").disabled = allLocked;
+  $("#dock-roll").disabled = allLocked;
   $("#mouth-note").hidden = config.parts.body !== "bear";
   for (const kind of Object.keys(TABLES)) {
-    const { select, lock, reroll } = partControls[kind];
+    const { select, lock, reroll, reel, glyph } = partControls[kind];
     select.value = config.parts[kind];
+    glyph.textContent = windowGlyph(kind, TABLES[kind].find(part => part.id === config.parts[kind]));
+    reel.dataset.locked = String(config.locks[kind]);
     lock.setAttribute("aria-pressed", String(config.locks[kind]));
-    lock.innerHTML = icon(config.locks[kind] ? "lock" : "unlock");
+    lock.innerHTML = `${icon(config.locks[kind] ? "lock" : "unlock")}<span class="btn-text">${config.locks[kind] ? "Locked" : "Lock"}</span>`;
     lock.title = `${config.locks[kind] ? "Unlock" : "Lock"} ${kind} for random rolls`;
     lock.setAttribute("aria-label", lock.title);
     reroll.disabled = config.locks[kind];
@@ -244,6 +220,9 @@ function refresh() {
   renderExport();
   renderAnimation();
   persist();
+  const signature = JSON.stringify(editor.getParts());
+  if (signature !== lastParts) streak();
+  lastParts = signature;
 }
 
 for (const entry of STATES) {
@@ -255,20 +234,29 @@ for (const entry of STATES) {
   $("#states").append(button);
   stateButtons.set(entry.id, button);
 }
+function optionGlyph(kind, part) {
+  return kind === "body" ? `${part.left}…${part.right}` : kind === "eyes" ? part.open.join(" ") : part.calm;
+}
+function windowGlyph(kind, part) {
+  return kind === "body" ? `${part.left} ${part.right}` : kind === "eyes" ? part.open.join(" ") : part.calm;
+}
 for (const [kind, table] of Object.entries(TABLES)) {
-  const row = document.createElement("div");
-  row.className = "part-row";
+  const title = kind[0].toUpperCase() + kind.slice(1);
+  const reel = document.createElement("div");
+  reel.className = "reel";
+  const glyph = document.createElement("div");
+  glyph.className = "reel-window";
+  glyph.setAttribute("aria-hidden", "true");
   const label = document.createElement("label");
   label.className = "part-label";
-  label.textContent = kind;
+  label.textContent = title;
   const select = document.createElement("select");
   select.className = "part-select";
   select.id = `part-${kind}`;
   for (const part of table) {
     const option = document.createElement("option");
     option.value = part.id;
-    const glyph = kind === "body" ? `${part.left}…${part.right}` : kind === "eyes" ? part.open.join(" ") : part.calm;
-    option.textContent = `${part.id[0].toUpperCase() + part.id.slice(1)}  ${glyph}`;
+    option.textContent = `${part.id[0].toUpperCase() + part.id.slice(1)} ${optionGlyph(kind, part)}`;
     select.append(option);
   }
   select.addEventListener("change", () => {
@@ -276,35 +264,44 @@ for (const [kind, table] of Object.entries(TABLES)) {
     refresh();
   });
   label.append(select);
+  const actions = document.createElement("div");
+  actions.className = "reel-actions";
   const lock = document.createElement("button");
-  lock.className = "icon-button";
+  lock.className = "pill-button";
   lock.type = "button";
-  lock.setAttribute("aria-label", `Lock ${kind} for random rolls`);
   lock.addEventListener("click", () => {
     editor.setLocked(kind, !editor.isLocked(kind));
     renderControls();
     persist();
   });
   const reroll = document.createElement("button");
-  reroll.className = "icon-button";
+  reroll.className = "pill-button";
   reroll.type = "button";
-  reroll.innerHTML = icon("roll");
+  reroll.innerHTML = `${icon("roll")}<span class="btn-text">Reroll</span>`;
   reroll.title = `Reroll ${kind}`;
   reroll.setAttribute("aria-label", `Reroll ${kind}`);
   reroll.addEventListener("click", () => { history.change(() => editor.reroll(kind)); refresh(); });
-  row.append(label, lock, reroll);
-  $("#parts").append(row);
-  partControls[kind] = { select, lock, reroll };
+  actions.append(lock, reroll);
+  reel.append(glyph, label, actions);
+  $("#parts").append(reel);
+  partControls[kind] = { select, lock, reroll, reel, glyph };
 }
 
-$("#family-seed").addEventListener("input", () => { renderFamily(); saveFamilySettings(); });
-$("#family-count").addEventListener("input", () => { renderFamily(); saveFamilySettings(); });
-$("#roll").addEventListener("click", () => { history.change(() => editor.roll()); refresh(); });
-$("#undo").addEventListener("click", () => { history.undo(); refresh(); });
+for (const id of ["#roll", "#dock-roll"]) $(id).addEventListener("click", () => { history.change(() => editor.roll()); refresh(); });
+for (const id of ["#undo", "#dock-undo"]) $(id).addEventListener("click", () => { history.undo(); refresh(); });
+$("#show-more").addEventListener("click", () => { showAll = !showAll; renderGallery(); });
+compact.addEventListener("change", () => { renderGallery(); updateDock(); fitFace(); });
+
+// The dock keeps the face and Roll in reach: always on phones, and on wider screens once the editor scrolls away.
+let workspaceVisible = true;
+function updateDock() { $("#dock").dataset.visible = String(compact.matches || !workspaceVisible); }
+new IntersectionObserver(([entry]) => { workspaceVisible = entry.isIntersecting; updateDock(); }).observe($("#workspace"));
+updateDock();
 $("#name").addEventListener("input", event => {
   editor.setName(event.target.value);
   renderControls();
   renderExport();
+  family.render(state);
   $("#face").setAttribute("aria-label", `${editor.getConfig().name}, ${state} expression`);
   persist();
 });
@@ -313,6 +310,7 @@ $("#auto-name").addEventListener("click", () => {
   editor.setName("");
   renderControls();
   renderExport();
+  family.render(state);
   $("#face").setAttribute("aria-label", `${editor.getConfig().name}, ${state} expression`);
   persist();
   notify(`Automatic name: ${editor.getConfig().name}`);
@@ -353,7 +351,7 @@ async function copy(text, success) {
     area.className = "manual-copy";
     const close = document.createElement("button");
     close.textContent = "Done";
-    close.className = "dark-button manual-copy-close";
+    close.className = "manual-copy-close";
     const previousFocus = document.activeElement;
     const dismiss = () => { area.remove(); close.remove(); previousFocus?.focus(); };
     close.addEventListener("click", dismiss);
@@ -364,17 +362,6 @@ async function copy(text, success) {
     notify("Clipboard unavailable. Copy the selected text, then choose Done.");
   }
 }
-$("#copy-family").addEventListener("click", () => {
-  const parent = editor.getCharacter();
-  const data = {
-    parent: { name: parent.name, parts: parent.parts },
-    seed: $("#family-seed").value,
-    children: familyChildren.map((child, index) => ({
-      index, name: child.name, parts: child.parts,
-    })),
-  };
-  copy(JSON.stringify(data, null, 2), "Family JSON copied");
-});
 $("#copy-face").addEventListener("click", () => copy($("#face").textContent, "Face copied"));
 $("#copy-export").addEventListener("click", () => copy(editor.export(format), "Character export copied"));
 $("#download").addEventListener("click", () => {
@@ -402,5 +389,10 @@ document.addEventListener("visibilitychange", () => {
   else startPlayback();
 });
 window.addEventListener("pagehide", stopPlayback);
+let fitWidth = 0;
+new ResizeObserver(() => {
+  const width = $("#face-wrap").clientWidth;
+  if (width !== fitWidth) { fitWidth = width; fitFace(); }
+}).observe($("#face-wrap"));
 refresh();
 
