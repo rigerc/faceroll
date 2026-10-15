@@ -16,7 +16,7 @@
 ʕ^▽^ʔ ♪     happy
 ```
 
-Each character has nine expressions: `idle`, `working`, `waiting`, `questioning`, `happy`, `sad`, `surprised`, `angry`, and `sleepy`. The examples above are illustrative; generated faces depend on the chosen parts.
+Each character has ten expressions: `idle`, `working`, `waiting`, `questioning`, `happy`, `sad`, `surprised`, `angry`, `sleepy`, and `dead` (static X eyes). The examples above are illustrative; generated faces depend on the chosen parts.
 
 - **Make it yours:** 27 bodies, 16 eye styles, 15 mouths, and 24 ready-made presets.
 - **Keep it recognizable:** use a seed or save the parts to recreate a character. Names are assigned automatically from the face's parts, or you can set your own.
@@ -219,7 +219,7 @@ Framework adapters display still faces during server rendering, respect reduced 
 
 ## Try the playground
 
-The local playground lets you browse presets, roll and edit parts, lock selections, undo changes, and preview all nine expressions. You can inspect individual animation frames, explore thread families, and copy or download system prompts, JSON, Markdown, or Node.js source. Character settings are saved in local storage when available.
+The local playground lets you browse presets, roll and edit parts, lock selections, undo changes, and preview all ten expressions. You can inspect individual animation frames, explore thread families, and copy or download system prompts, JSON, Markdown, or Node.js source. Character settings are saved in local storage when available.
 
 ```sh
 git clone https://github.com/rigerc/faceroll.git

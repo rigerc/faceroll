@@ -5,7 +5,7 @@ import type { Parts } from "./parts";
 import { STATES, type StateName } from "./states";
 
 export interface PromptOptions {
-  /** Only include these states. Defaults to all nine. */
+  /** Only include these states. Defaults to all states. */
   states?: readonly StateName[];
 }
 
@@ -70,7 +70,7 @@ export function deserialize(data: Pick<SerializedCharacter, "name" | "nameMode" 
 }
 
 /**
- * Return standalone Node.js source for the character's nine animations.
+ * Return standalone Node.js source for the character's animations.
  * The generated source is dependency-free and uses the original [face, ms]
  * tuples; call `play("working")` and retain its stop function.
  */
@@ -95,7 +95,7 @@ export function toNodeSource(character: Character): string {
     "  function next() {",
     "    const [face, ms] = animation.frames[index++ % animation.frames.length];",
     '    stream.write("\\r\\x1b[K" + face);',
-    "    timer = setTimeout(next, ms);",
+    "    if (animation.frames.length > 1) timer = setTimeout(next, ms);",
     "  }",
     "  next();",
     "  return () => {",

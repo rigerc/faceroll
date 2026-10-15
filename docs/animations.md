@@ -140,3 +140,9 @@ el.style.whiteSpace = "pre";
 
 Use `still` anywhere that cannot animate (logs, markdown, chat). Respect
 `prefers-reduced-motion` by showing `still` instead of playing.
+
+## dead — static
+
+Both eyes become `X`; the body and calm mouth stay the same. One frame is
+shown once without a playback timer. Its 1,000 ms duration lets Cycle moods
+advance after a short pause.

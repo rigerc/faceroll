@@ -10,6 +10,7 @@ export const STATES = [
   { id: "surprised",   label: "Surprised",   kind: "emotion", use: "something unexpected came up",                     say: "That file is huge" },
   { id: "angry",       label: "Angry",       kind: "emotion", use: "you are blocked by an error",                      say: "Blocked by a failing check" },
   { id: "sleepy",      label: "Sleepy",      kind: "emotion", use: "a long time has passed with no activity",          say: "Still here if you need me" },
+  { id: "dead",        label: "Dead",        kind: "emotion", use: "you have shut down or given up",                    say: "Completely done for" },
 ] as const satisfies readonly StateInfo[];
 
 export type StateName = (typeof STATES)[number]["id"];

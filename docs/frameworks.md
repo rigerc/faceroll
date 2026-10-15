@@ -69,7 +69,7 @@ el.paused = false;
 
 - `preset`: named preset ID, default `classic`.
 - `name`: name for a preset-generated character, default `Agent`.
-- `state`: one of the nine built-in state IDs, default `idle`.
+- `state`: one of the ten built-in state IDs, default `idle`.
 - `paused`: Boolean attribute displaying a static face when present.
 - `.character`: an optional immutable `Character` that takes precedence over
   `preset`. Assign `undefined` to return to preset mode.

@@ -101,7 +101,7 @@ export function registerTools(server: McpServer): void {
 
   server.registerTool("list_states", {
     title: "Browse agent states",
-    description: "List all nine agent states and emotions, with labels and guidance on when to use them.",
+    description: "List all ten agent states and emotions, with labels and guidance on when to use them.",
     outputSchema: toMcpSchema(Schema.Struct({ states: Schema.Array(Schema.Struct({
       id: Schema.String, label: Schema.String, kind: Schema.String, use: Schema.String, say: Schema.String,
     })) })),

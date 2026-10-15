@@ -39,6 +39,7 @@ export interface Player {
 /**
  * A timer-driven player that works in browsers and Node.
  * `onFrame` runs once per frame, including the first one, right when `play` is called.
+ * Single-frame animations render once without scheduling a timer.
  */
 export function createPlayer(
   onFrame: (frame: Frame, index: number, animation: Animation) => void,
@@ -55,7 +56,7 @@ export function createPlayer(
     const frame = current.frames[index] as Frame;
     onFrame(frame, index, current);
     index = (index + 1) % current.frames.length;
-    timer = set(tick, frame.ms);
+    if (current.frames.length > 1) timer = set(tick, frame.ms);
   };
 
   const stop = (): void => {

@@ -50,7 +50,7 @@
   $("#editor-title").textContent = "Character";
   $(".preview-panel .panel-bar h2").textContent = "Live preview";
 
-  // The original app owns all nine mood buttons, animation playback, editor,
+  // The original app owns all ten mood buttons, animation playback, editor,
   // family generation, exports, storage and reduced-motion behavior.
   const mobile = matchMedia("(max-width: 760px)");
   const dock = document.createElement("nav");

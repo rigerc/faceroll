@@ -52,7 +52,7 @@ npx faceroll parts
 ## `play`
 
 Rolls a character from the same `--seed/--vibe/--name/--body/--eyes/--mouth`
-flags, then animates `<state>` (one of the nine in `faceroll states`) with the
+flags, then animates `<state>` (one of the ten in `faceroll states`) with the
 suffix `  <Name> is <label>`. Uses `createTerminalPlayer`, so non-TTY output
 prints the still once instead of animating.
 

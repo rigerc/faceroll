@@ -55,7 +55,7 @@ non-integer or out-of-range slots/counts throw `RangeError`.
 
 Uniqueness is defined by the rendered idle face, not just part IDs. Current
 capacity: 15 bear children (bear mouths are visually fixed), 239 otherwise.
-Child results have automatic names and full nine-state animations; they do not
+Child results have automatic names and full ten-state animations; they do not
 set `Character.seed`, since they are derived rather than individually rolled.
 
 ## Parts (`src/parts.ts`)
@@ -76,9 +76,9 @@ import { BODIES, EYES, MOUTHS, PART_KINDS, partPool } from "faceroll";
 import { STATES, STATE_NAMES, getState } from "faceroll";
 ```
 
-- `STATES` — 9 entries, each `{ id, label, kind, use, say }`. Kind is `"state"` (idle, working, waiting, questioning) or `"emotion"` (happy, sad, surprised, angry, sleepy).
+- `STATES` — 10 entries, each `{ id, label, kind, use, say }`. Kind is `"state"` (idle, working, waiting, questioning) or `"emotion"` (happy, sad, surprised, angry, sleepy, dead).
 - `STATE_NAMES: readonly StateName[]`.
-- `getState(name)` — returns the `StateInfo`, throws `RangeError` on unknown names. `StateName` is the union of the nine ids.
+- `getState(name)` — returns the `StateInfo`, throws `RangeError` on unknown names. `StateName` is the union of the ten ids.
 
 ## Animations (`src/build.ts`)
 
@@ -96,7 +96,7 @@ interface Animation {
 }
 ```
 
-`buildAnimations(parts)` builds all nine animations for one part set. Bodies never move: glances shift the core with a space, tails (`...`, `?`, `!`, `♪`, `zzZ`) are appended. See [animations](animations.md) for the frame tables.
+`buildAnimations(parts)` builds all ten animations for one part set. Bodies never move: glances shift the core with a space, tails (`...`, `?`, `!`, `♪`, `zzZ`) are appended. See [animations](animations.md) for the frame tables.
 
 ## Playback (`src/player.ts`)
 
@@ -130,7 +130,7 @@ import { toSystemPrompt, toMarkdown, serialize, deserialize, toNodeSource } from
 | `toMarkdown(character)` | `### Name` + table of State \| Face \| Use when. |
 | `serialize(character)` | Plain JSON-safe data: `{ name, nameMode?, seed?, parts, animations }`; frames as `[text, ms]` pairs. |
 | `deserialize(data)` | Rebuilds via `createCharacter` (animations regenerated from parts; needs `name` + `parts`, optional `seed` and `nameMode`). |
-| `toNodeSource(character)` | Standalone dependency-free Node source defining `play(state, stream?)` over the nine animations. |
+| `toNodeSource(character)` | Standalone dependency-free Node source defining `play(state, stream?)` over the ten animations. |
 
 ## Utilities
 

@@ -29,7 +29,7 @@ The optional `mcp/` package has its own dependencies, lockfile, Vite build and
 colocated Vitest tests. See its [server guide](../mcp/README.md).
 
 In the playground, **Cycle moods** plays one complete animation loop per mood
-and wraps through all nine moods at the selected speed. Pause also pauses cycling;
+and wraps through all ten moods at the selected speed. Pause also pauses cycling;
 Play resumes from the current mood. Selecting a mood or an individual frame stops
 cycling. Cycling starts only when explicitly enabled and stops when a reduced-motion
 preference is enabled. Hidden pages suspend playback and cycling until visible again.
@@ -49,8 +49,8 @@ src/
   index.ts      public exports
   types.ts      Vibe, Look, Pair, expressions, BodyDef/EyeDef/MouthDef, Frame, StateInfo
   parts.ts      11 bodies / 6 eyes / 5 mouths + partPool + getters
-  states.ts     9 STATES + STATE_NAMES + getState
-  build.ts      buildAnimations — the nine frame tables
+  states.ts     10 STATES + STATE_NAMES + getState
+  build.ts      buildAnimations — the ten frame tables
   character.ts  Character, rollCharacter, createCharacter, rerollPart, listParts
   player.ts     createPlayer, frameAt, frameIndexAt
   terminal.ts   createTerminalPlayer, playInTerminal (faceroll/terminal)

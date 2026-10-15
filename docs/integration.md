@@ -8,7 +8,7 @@ See [framework components](frameworks.md) for React, Vue and Web Components.
 import { rollCharacter, toSystemPrompt } from "faceroll";
 
 const pixel = rollCharacter({ name: "Pixel", seed: "pixel", vibe: "cute" });
-const prompt = toSystemPrompt(pixel);                    // all nine states
+const prompt = toSystemPrompt(pixel);                    // all ten states
 const subset = toSystemPrompt(pixel, { states: ["idle", "working", "happy"] });
 ```
 
@@ -58,7 +58,7 @@ writeFileSync("animations.cjs", toNodeSource(character));
 // or: faceroll roll --seed pixel --format node > animations.cjs
 ```
 
-The output is dependency-free, embeds all nine animations as `[face, ms]`
+The output is dependency-free, embeds all ten animations as `[face, ms]`
 tuples (user data JSON-encoded), and defines `play(state, stream?)` returning a
 stop function. Verified executable by the test suite.
 

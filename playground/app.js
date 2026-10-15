@@ -126,7 +126,7 @@ function updatePlayback() {
   $("#play").textContent = playing ? "Pause" : "Play";
   $("#play").setAttribute("aria-pressed", String(playing));
   $("#cycle-moods").setAttribute("aria-pressed", String(cycling));
-  $("#motion-status").textContent = playing ? (cycling ? "Cycling moods" : "Animating") : "Paused";
+  $("#motion-status").textContent = editor.getAnimation(state).frames.length === 1 ? "Static" : playing ? (cycling ? "Cycling moods" : "Animating") : "Paused";
 }
 function stopPlayback() {
   player.stop();
@@ -152,7 +152,7 @@ function renderAnimation() {
   $("#face").style.minWidth = `${animation.width}ch`;
   $("#face").setAttribute("aria-label", `${editor.getConfig().name || "Character"}, ${state} expression`);
   $("#state-say").textContent = STATES.find(entry => entry.id === state).say;
-  $("#animation-info").textContent = `${animation.frames.length} frames · ${(animation.duration / 1000).toFixed(2)}s loop`;
+  $("#animation-info").textContent = animation.frames.length === 1 ? "Static · no animation" : `${animation.frames.length} frames · ${(animation.duration / 1000).toFixed(2)}s loop`;
   stateButtons.forEach((button, id) => button.setAttribute("aria-pressed", String(id === state)));
   frameButtons = animation.frames.map((frame, index) => {
     const button = document.createElement("button");

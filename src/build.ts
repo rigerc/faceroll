@@ -24,7 +24,7 @@ function animation(name: StateName, frames: Frame[], still: string): Animation {
 }
 
 /**
- * Build all nine animations for one set of parts.
+ * Build all animations for one set of parts.
  *
  * Every frame is the same body, eyes and mouth in a different pose, so a
  * character stays recognizable as it changes state. Glances move the face
@@ -36,14 +36,14 @@ export function buildAnimations(parts: Parts): Record<StateName, Animation> {
   const eyes = getEyes(parts.eyes);
   const mouth = getMouth(body.mouth ?? parts.mouth);
 
-  const face = (e: EyeExpression, m: MouthExpression, look: Look = "c", tail = ""): string => {
-    const [l, r] = eyes[e];
+  const face = (e: EyeExpression | "dead", m: MouthExpression, look: Look = "c", tail = ""): string => {
+    const [l, r] = e === "dead" ? ["X", "X"] : eyes[e];
     let core = l + mouth[m] + r;
     if (look === "l") core += " ";
     else if (look === "r") core = " " + core;
     return body.left + core + body.right + tail;
   };
-  const f = (e: EyeExpression, m: MouthExpression, look: Look, tail: string, ms: number): Frame => ({
+  const f = (e: EyeExpression | "dead", m: MouthExpression, look: Look, tail: string, ms: number): Frame => ({
     text: face(e, m, look, tail),
     ms,
   });
@@ -142,6 +142,8 @@ export function buildAnimations(parts: Parts): Record<StateName, Animation> {
       ],
       face("angry", "angry", "c", " #"),
     ),
+    // A single frame stays still; its duration is the mood-cycle dwell time.
+    dead: animation("dead", [f("dead", "calm", "c", "", 1000)], face("dead", "calm")),
     sleepy: animation(
       "sleepy",
       [

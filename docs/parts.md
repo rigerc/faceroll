@@ -49,7 +49,7 @@ Each mouth defines glyphs for `calm / smile / big / open / sad / flat / unsure /
 
 `vibe` is `"any" | "cute" | "cool" | "weird"`. It only filters which ids a roll
 may pick — `createCharacter` and `editor.setParts` accept any valid id regardless
-of vibe. Pool sizes: 27 bodies, 16 eyes, 15 mouths → 6,480 part combinations × 9 states
+of vibe. Pool sizes: 27 bodies, 16 eyes, 15 mouths → 6,480 part combinations × 10 states
 = 58,320 animations covered by tests.
 
 ## Added part IDs (v0.3.0)

@@ -151,6 +151,16 @@ describe("animations", () => {
     }
   });
 
+  it("gives Dead static X eyes while preserving the body and calm mouth", () => {
+    for (const c of all) {
+      const body = BODIES.find((body) => body.id === c.parts.body)!;
+      const mouth = MOUTHS.find((mouth) => mouth.id === (body.mouth ?? c.parts.mouth))!;
+      const dead = c.animations.dead;
+      expect(dead.still).toBe(body.left + "X" + mouth.calm + "X" + body.right);
+      expect(dead.frames).toEqual([{ text: dead.still, ms: 1000 }]);
+    }
+  });
+
   it("keeps every frame compact", () => {
     let widest = 0;
     for (const c of all) for (const name of STATE_NAMES) widest = Math.max(widest, c.animations[name].width);
@@ -260,6 +270,23 @@ describe("createPlayer", () => {
     timers.advance(anim.duration * 2);
     expect(seen.length).toBeGreaterThan(anim.frames.length * 2);
     expect(seen[anim.frames.length]).toBe(anim.frames[0]!.text); // looped
+  });
+
+  it("switches to Dead without scheduling animation and can resume other moods", () => {
+    const timers = fakeTimers();
+    const seen: string[] = [];
+    const player = createPlayer((frame) => seen.push(frame.text), timers);
+    const dead = createCharacter({ body: "round", eyes: "dot", mouth: "w" }).animations.dead;
+    player.play(anim);
+    player.play(dead);
+    expect(seen[seen.length - 1]).toBe("(XωX)");
+    expect(timers.pending()).toBe(0);
+    expect(player.playing).toBe(false);
+    timers.advance(10_000);
+    expect(seen).toHaveLength(2);
+    player.play(anim);
+    expect(timers.pending()).toBe(1);
+    player.stop();
   });
 
   it("stops cleanly and restarts when the animation changes", () => {
@@ -446,6 +473,17 @@ describe("stateful editor", () => {
 });
 
 describe("node source output", () => {
+  it("renders Dead once without a timer in standalone exports", async () => {
+    const { runInNewContext } = await import("node:vm");
+    const character = createCharacter({ body: "round", eyes: "dot", mouth: "w" });
+    const messages: string[] = [];
+    runInNewContext(toNodeSource(character) + '\nplay("dead")', {
+      process: { stdout: { write: (text: string) => messages.push(text) } },
+      setTimeout: () => { throw new Error("Dead must not animate"); },
+    });
+    expect(messages).toEqual(["\r\x1b[K(XωX)"]);
+  });
+
   it("generates executable self-contained JavaScript with the original frame tuples", async () => {
     const { runInNewContext } = await import("node:vm");
     const character = createCharacter({ body: "bear", eyes: "dot", mouth: "w" }, { name: "Pixel" });
@@ -470,12 +508,12 @@ describe("node source output", () => {
 });
 
 describe("expanded faces and presets", () => {
-  it("offers 6480 character combinations across the original nine states", () => {
+  it("offers 6480 character combinations across ten states", () => {
     expect(BODIES).toHaveLength(27);
     expect(EYES).toHaveLength(16);
     expect(MOUTHS).toHaveLength(15);
     expect(BODIES.length * EYES.length * MOUTHS.length).toBe(6480);
-    expect(STATES).toHaveLength(9);
+    expect(STATES).toHaveLength(10);
   });
 
   it("provides 24 named, unique, frozen presets", () => {
