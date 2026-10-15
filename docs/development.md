@@ -95,7 +95,7 @@ over the preferred budget). Run it after `npm run build` and re-record with
 ## Releases
 
 Push a semantic version tag matching the root `package.json` version, such as
-`v0.3.0`, to run `.github/workflows/release.yml`. Update `package.json` and
+`v1.0.0`, to run `.github/workflows/release.yml`. Update `package.json` and
 `package-lock.json` together and commit them before tagging:
 
 ```sh
@@ -104,6 +104,11 @@ npm version patch --no-git-tag-version
 git tag -a "v$(node -p 'require("./package.json").version')" -m "Release"
 git push origin main --follow-tags
 ```
+
+Alternatively, push the version changes directly to `main` with a commit message
+starting with `release:` (for example `release: 1.0.0`). The same workflow runs
+all checks and creates the version tag at that exact commit when publishing the
+GitHub Release. Other commits to `main` do not publish releases.
 
 The workflow validates the tag and lockfile, runs the same library, playground,
 size, smoke and MCP checks as CI, then builds a GitHub Release with generated

@@ -3,6 +3,8 @@ name: Release
 on:
   push:
     tags: ["v*"]
+    branches: [main]
+    paths: [package.json]
 
 permissions:
   contents: read
@@ -13,10 +15,12 @@ concurrency:
 
 jobs:
   validate:
+    if: github.ref_type == 'tag' || startsWith(github.event.head_commit.message, 'release:')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       prerelease: ${{ steps.version.outputs.prerelease }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -27,13 +31,14 @@ jobs:
       - name: Validate release version
         id: version
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
         run: |
           node --input-type=module <<'NODE'
           import { appendFileSync, readFileSync } from 'node:fs';
           const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
           const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
-          const tag = process.env.RELEASE_TAG;
+          const tag = process.env.REF_TYPE === 'tag' ? process.env.REF_NAME : `v${pkg.version}`;
           const semver = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/;
           const match = tag.match(semver);
           if (!match || tag !== `v${pkg.version}`) {
@@ -42,7 +47,7 @@ jobs:
           if (lock.version !== pkg.version || lock.packages[''].version !== pkg.version) {
             throw new Error('package-lock.json must match package.json version');
           }
-          appendFileSync(process.env.GITHUB_OUTPUT, `prerelease=${Boolean(match[4])}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `tag=${tag}\nprerelease=${Boolean(match[4])}\n`);
           NODE
 
   verify:
@@ -82,10 +87,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ needs.validate.outputs.tag }}
+          REF_TYPE: ${{ github.ref_type }}
           PRERELEASE: ${{ needs.validate.outputs.prerelease }}
         run: |
-          args=(--verify-tag --generate-notes --title "$RELEASE_TAG")
+          args=(--generate-notes --title "$RELEASE_TAG")
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            args+=(--verify-tag)
+          else
+            # Create the tag at the exact tested release commit, even if main advances.
+            args+=(--target "$GITHUB_SHA")
+          fi
           if [[ "$PRERELEASE" == "true" ]]; then
             args+=(--prerelease --latest=false)
           fi

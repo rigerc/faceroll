@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 1.0.0 — 2026-10-15
+
+- Release the library and optional MCP server as version 1.0.0.
+- Add deterministic parent/child character derivation and project thread families.
+- Add MCP tools for character generation, editing, snapshots and child derivation.
+- Add a responsive Studio playground with family previews, accessible controls,
+  light/dark/system themes and theme-aware branding.
+- Add GitHub release automation with CI checks, built package and playground
+  archives, checksums and prerelease support.
+
 - Assign a short, single-word name to every character by default, selected
   deterministically from a curated pool of 324 first names. The original 81 names
   are retained in order; the surname list is gone. Each name is shared by exactly
@@ -14,8 +24,6 @@
 - Follow part changes and undo with automatic names; preserve custom and legacy names.
 - Use automatic names in the playground, browser example, CLI and Web Component.
 
-
-## Unreleased
 
 - Added optional ESM React, Vue 3 and native Web Component adapters.
 - Exposed dedicated package subpaths with TypeScript declarations and optional

@@ -1,6 +1,6 @@
 {
   "name": "faceroll-mcp",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "MCP tools for faceroll animated ASCII characters",
   "type": "module",
   "license": "MIT",
@@ -30,7 +30,7 @@
     "inspect:http:cli": "npx --yes @modelcontextprotocol/inspector@2.11.0 --cli --transport http --server-url http://127.0.0.1:3000/mcp --method tools/list --format json"
   },
   "peerDependencies": {
-    "faceroll": "^0.3.0"
+    "faceroll": "^1.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/node": "^2.0.0",
