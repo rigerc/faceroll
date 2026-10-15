@@ -92,6 +92,28 @@ terminal entry. `files` ships `dist`, `examples`, `README.md`, `LICENSE`.
 over the preferred budget). Run it after `npm run build` and re-record with
 `node scripts/check-size.mjs --write` only when a growth is intended.
 
+## Releases
+
+Push a semantic version tag matching the root `package.json` version, such as
+`v0.3.0`, to run `.github/workflows/release.yml`. Update `package.json` and
+`package-lock.json` together and commit them before tagging:
+
+```sh
+npm version patch --no-git-tag-version
+# Update CHANGELOG.md, then commit the version and changelog changes.
+git tag -a "v$(node -p 'require("./package.json").version')" -m "Release"
+git push origin main --follow-tags
+```
+
+The workflow validates the tag and lockfile, runs the same library, playground,
+size, smoke and MCP checks as CI, then builds a GitHub Release with generated
+notes. Assets include the `faceroll` and `faceroll-mcp` npm tarballs, the static
+playground archive and `SHA256SUMS`. The MCP tarball uses its own package version;
+update its manifest, lockfile and peer dependency when releasing MCP changes.
+Tags with a prerelease suffix (for example `v0.4.0-beta.1`) create prereleases
+and are not marked as latest. Builds use only the automatic `GITHUB_TOKEN`;
+registry publishing remains a separate `npm publish` operation.
+
 ## Commit style
 
 A commit-msg hook enforces conventional commits: `<type>[!][(scope)]: <subject>`
