@@ -299,8 +299,11 @@ footer{max-width:none;background:var(--surface);padding:22px 30px}
 .family-card .trait-summary{margin-top:4px}
 
 @media(max-width:760px){
-  .stage{overflow-y:auto;grid-template-rows:auto auto minmax(54px,1fr)}
-  .stage .personality{grid-column:1/-1;grid-row:2;margin:0 auto}
-  .stage .face-wrap{grid-row:3}
-  .personality summary{min-height:44px;padding:12px 0}
+  .editor-panel .personality{flex-shrink:0;margin:16px 0 0;text-align:left;color:var(--foreground)}
+  .editor-panel .trait-badges{justify-content:flex-start}
+  .editor-panel .trait-badge{background:var(--selected-surface);border-color:var(--selected-border);color:var(--selected-text)}
+  .editor-panel .personality details{color:var(--muted)}
+  .editor-panel .personality summary{min-height:44px;padding:12px 0;margin:0}
+  .editor-panel .personality dt{color:var(--foreground)}
+  .editor-panel .personality dl,.editor-panel .personality details p{margin-left:0}
 }

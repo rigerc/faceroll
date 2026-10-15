@@ -5,6 +5,7 @@
   const editor = $(".editor-panel");
   const preview = $(".preview-panel");
   const moods = $(".mood-area");
+  const personality = $("#personality");
   const exportPanel = $(".export-section");
   const inspector = document.createElement("aside");
   inspector.className = "inspector-panel";
@@ -92,8 +93,11 @@
   function arrange() {
     if (mobile.matches) {
       preview.append(moods);
+      // Keep variable-length trait descriptions out of the fixed mobile preview.
+      $(".name-controls").after(personality);
     } else {
       inspector.prepend(moods);
+      $("#character-caption").after(personality);
     }
     activate(document.body.dataset.mobilePanel || "edit");
   }
