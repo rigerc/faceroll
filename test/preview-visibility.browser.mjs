@@ -3,6 +3,8 @@
 // This tests rendered geometry; DOM text and asset checks cannot catch clipping.
 const origin = "http://127.0.0.1:4173";
 const page = await browser.getPage("main");
+// Recheck the current deployment rather than a previously cached module.
+await page.setCacheEnabled(false);
 const results = [];
 for (const viewport of [
   { width: 390, height: 844 },
@@ -13,6 +15,7 @@ for (const viewport of [
 ]) {
   await page.setViewport(viewport);
   await page.goto(origin);
+  await page.waitForSelector(".mobile-dock");
   for (const expanded of [false, true]) {
     if (expanded) await page.click("#personality summary");
     // Short landscape screens intentionally use a normal scrolling page.
