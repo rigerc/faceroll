@@ -1,7 +1,7 @@
 import type { McpServer, CallToolResult } from "@modelcontextprotocol/server";
 import { Effect, Schema } from "effect";
 import {
-  FACE_PRESETS, STATES, STATE_NAMES, PART_KINDS,
+  PERSONALITY_TRAITS, FACE_PRESETS, STATES, STATE_NAMES, PART_KINDS,
   createCharacter, getFacePreset, listParts, partPool, rollCharacter, rerollPart,
   deriveChildCharacter, deriveChildCharacters,
   serialize, toMarkdown, toNodeSource, toSystemPrompt,
@@ -36,8 +36,14 @@ const SnapshotFields = {
 };
 const Frame = Schema.Tuple(Schema.String, Schema.Number);
 const Animation = Schema.Struct({ still: Schema.String, frames: Schema.Array(Frame) });
+const Trait = Schema.Struct({
+  id: Schema.Literal(...PERSONALITY_TRAITS.map((trait) => trait.id)),
+  label: Schema.String, description: Schema.String,
+});
+const Personality = Schema.Tuple(Trait, Trait, Trait);
 const CharacterOutput = Schema.Struct({
   name: Schema.String,
+  personality: Personality,
   nameMode: Schema.optional(NameMode),
   seed: Schema.optional(Schema.String),
   parts: Parts,
@@ -82,12 +88,15 @@ export function registerTools(server: McpServer): void {
     description: "List named faceroll presets with their parts, style and idle face.",
     inputSchema: toMcpSchema(Schema.Struct({ vibe: Schema.optional(Vibe) })),
     outputSchema: toMcpSchema(Schema.Struct({ presets: Schema.Array(Schema.Struct({
-      id: Schema.String, label: Schema.String, vibe: Schema.String, parts: Parts, still: Schema.String,
+      id: Schema.String, label: Schema.String, vibe: Schema.String, parts: Parts, still: Schema.String, personality: Personality,
     })) })),
     annotations,
   }, (args) => execute(() => ({ presets: FACE_PRESETS
     .filter((preset) => !args.vibe || args.vibe === "any" || preset.vibe === args.vibe)
-    .map((preset) => ({ ...preset, still: createCharacter(preset.parts).animations.idle.still })) })));
+    .map((preset) => {
+      const character = createCharacter(preset.parts);
+      return { ...preset, still: character.animations.idle.still, personality: character.personality };
+    }) })));
 
   server.registerTool("list_parts", {
     title: "Browse face parts",
@@ -110,7 +119,7 @@ export function registerTools(server: McpServer): void {
 
   server.registerTool("roll_character", {
     title: "Create an agent character",
-    description: "Roll an animated ASCII character, or choose a named preset. The same seed and options reproduce a roll. Locked parts override preset parts. Returns a unique automatic name per part combination unless a custom name is supplied. Save parts and nameMode for later tools.",
+    description: "Roll an animated ASCII character, or choose a named preset. The same seed and options reproduce a roll. Locked parts override preset parts. Returns an automatic name unless a custom name is supplied, plus three stable personality traits determined by the face parts. Save parts and nameMode for later tools.",
     inputSchema: toMcpSchema(Selection),
     outputSchema: toMcpSchema(CharacterOutput),
     annotations: { ...annotations, idempotentHint: false },

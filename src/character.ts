@@ -3,11 +3,14 @@ import { BODIES, EYES, MOUTHS, PART_KINDS, getBody, getEyes, getMouth, partPool,
 import { pick, randomSeed, seededRng, type Rng } from "./rng";
 import type { StateName } from "./states";
 import { nameForParts, type NameMode } from "./names";
+import { personalityForParts, type Personality } from "./personality";
 import type { Vibe } from "./types";
 
 /** A complete agent face: its parts and one animation per state. */
 export interface Character {
   readonly name: string;
+  /** Stable traits shared by every expression of this face. */
+  readonly personality: Personality;
   /** Omitted on legacy snapshots, whose names are treated as custom. */
   readonly nameMode?: NameMode;
   /** The seed that produced this character, if it was rolled with one. */
@@ -57,6 +60,7 @@ export function createCharacter(parts: Parts, options: CreateOptions = {}): Char
   const character: Character = {
     name: nameMode === "auto" ? nameForParts(normalized) : customName as string,
     nameMode,
+    personality: personalityForParts(normalized),
     ...(options.seed !== undefined ? { seed: options.seed } : {}),
     parts: Object.freeze(normalized),
     animations: Object.freeze(buildAnimations(normalized)),

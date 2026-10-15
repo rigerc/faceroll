@@ -89,3 +89,11 @@ when a new thread is created and store it with the thread. The plain-text
 format shows the parent and numbered children. JSON contains the parent snapshot
 and an array of `{ index, character }` entries. The command rejects invalid or
 out-of-capacity requests instead of returning duplicate faces.
+
+## Personality traits
+
+`roll` text output includes three automatic personality labels. `children` text
+output includes the parent and each child's labels. JSON includes full
+`personality` trait objects (`id`, `label`, `description`); prompt, Markdown,
+and Node.js exports include their descriptions. Assignment depends only on the
+face parts and requires no extra flags. See [personality](api.md#personality-srcpersonalityts).

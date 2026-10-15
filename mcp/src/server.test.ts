@@ -65,6 +65,7 @@ describe.each(["memory", "http"] as const)("Faceroll tools over %s", (transport)
     }
     const roll = tools.find((tool) => tool.name === "roll_character");
     expect(roll?.inputSchema.properties).toHaveProperty("lock");
+    expect(roll?.outputSchema?.properties).toHaveProperty("personality");
   });
 
   it("returns the library catalog and filters by vibe", async () => {
@@ -74,6 +75,7 @@ describe.each(["memory", "http"] as const)("Faceroll tools over %s", (transport)
     const result = await client.callTool({ name: "list_presets", arguments: { vibe: "cool" } });
     const expected = FACE_PRESETS.filter((preset) => preset.vibe === "cool").map((preset) => ({
       ...preset, still: createCharacter(preset.parts).animations.idle.still,
+      personality: createCharacter(preset.parts).personality,
     }));
     expect(result.structuredContent).toEqual({ presets: expected });
   });
@@ -82,6 +84,7 @@ describe.each(["memory", "http"] as const)("Faceroll tools over %s", (transport)
     const client = await setupClient(transport);
     const rolled = await client.callTool({ name: "roll_character", arguments: { preset: "classic" } });
     const snapshot = rolled.structuredContent as { name: string; nameMode: "auto"; parts: typeof parts };
+    expect(snapshot).toHaveProperty("personality", createCharacter(parts).personality);
     expect(snapshot.nameMode).toBe("auto");
     expect(snapshot.name).toBe(createCharacter(parts).name);
     const rerolled = await client.callTool({ name: "reroll_part", arguments: {

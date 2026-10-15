@@ -39,6 +39,7 @@ import { rollCharacter, toSystemPrompt } from "faceroll";
 
 const agent = rollCharacter({ seed: "my-agent", vibe: "cute" });
 
+console.log(agent.personality.map(trait => trait.label)); // Three stable personality traits
 console.log(agent.name);                    // Automatic name for this face
 console.log(agent.animations.idle.still);   // One-line idle expression
 console.log(agent.animations.working.frames); // [{ text, ms }, ...]
@@ -54,7 +55,7 @@ import { createCharacter } from "faceroll";
 const restored = createCharacter(agent.parts);
 ```
 
-Every character contains immutable `parts` and `animations`. An animation includes `still`, `frames`, `duration`, and `width`, so you can render it with Faceroll's player or your own.
+Every character contains immutable `parts`, `personality`, and `animations`. Personality is three traits with stable `id`, `label`, and `description` fields, assigned from the face parts. Renaming or changing expressions keeps the same traits; editing parts recalculates them. Different faces can share traits. System prompts include their communication guidance, and all character exports include the traits. Older saved characters gain traits automatically when restored. See the [personality API](docs/api.md#personality-srcpersonalityts). An animation includes `still`, `frames`, `duration`, and `width`, so you can render it with Faceroll's player or your own.
 
 ## Pick a preset or customize a face
 
@@ -219,7 +220,7 @@ Framework adapters display still faces during server rendering, respect reduced 
 
 ## Try the playground
 
-The local playground lets you browse presets, roll and edit parts, lock selections, undo changes, and preview all ten expressions. You can inspect individual animation frames, explore thread families, and copy or download system prompts, JSON, Markdown, or Node.js source. Character settings are saved in local storage when available.
+The local playground shows personality badges and expandable trait descriptions. It lets you browse presets, roll and edit parts, lock selections, undo changes, and preview all ten expressions. You can inspect individual animation frames, explore thread families, and copy or download system prompts, JSON, Markdown, or Node.js source. Character settings are saved in local storage when available.
 
 ```sh
 git clone https://github.com/rigerc/faceroll.git

@@ -85,7 +85,7 @@ function renderFamily() {
     copyJson.textContent = "Copy JSON";
     copyJson.addEventListener("click", () => copy(JSON.stringify({ index, character: serialize(child) }, null, 2), `Thread ${index} JSON copied`));
     actions.append(copyFace, copyJson);
-    card.append(slot, face, name, actions);
+    card.append(slot, face, name, traitSummary(child), actions);
     return card;
   });
   $("#family-children").replaceChildren(...cards);
@@ -182,6 +182,40 @@ function renderAnimation() {
   renderFamily();
 }
 
+function traitSummary(character) {
+  const summary = document.createElement("span");
+  summary.className = "trait-summary";
+  summary.textContent = character.personality.map(trait => trait.label).join(" · ");
+  return summary;
+}
+
+function renderPersonality() {
+  const traits = editor.getCharacter().personality;
+  const badges = document.createElement("div");
+  badges.className = "trait-badges";
+  for (const trait of traits) {
+    const badge = document.createElement("span");
+    badge.className = "trait-badge";
+    badge.textContent = trait.label;
+    badges.append(badge);
+  }
+  const details = document.createElement("details");
+  const toggle = document.createElement("summary");
+  toggle.textContent = "About these traits";
+  const list = document.createElement("dl");
+  for (const trait of traits) {
+    const label = document.createElement("dt");
+    label.textContent = trait.label;
+    const description = document.createElement("dd");
+    description.textContent = trait.description;
+    list.append(label, description);
+  }
+  const hint = document.createElement("p");
+  hint.textContent = "Traits follow the face parts and stay the same across expressions.";
+  details.append(toggle, list, hint);
+  $("#personality").replaceChildren(badges, details);
+}
+
 function renderGallery() {
   const presets = filterPresets(FACE_PRESETS, filter, $("#search").value);
   $("#preset-count").textContent = String(presets.length);
@@ -203,7 +237,7 @@ function renderGallery() {
     const vibe = document.createElement("span");
     vibe.className = "preset-vibe";
     vibe.textContent = `${preset.label} · ${preset.vibe}`;
-    button.append(face, name, vibe);
+    button.append(face, name, vibe, traitSummary(character));
     button.addEventListener("click", () => {
       history.change(() => editor.applyPreset(preset.id));
       refresh();
@@ -240,6 +274,7 @@ function renderControls() {
 }
 function refresh() {
   renderControls();
+  renderPersonality();
   renderGallery();
   renderExport();
   renderAnimation();
@@ -367,10 +402,10 @@ async function copy(text, success) {
 $("#copy-family").addEventListener("click", () => {
   const parent = editor.getCharacter();
   const data = {
-    parent: { name: parent.name, parts: parent.parts },
+    parent: { name: parent.name, parts: parent.parts, personality: parent.personality },
     seed: $("#family-seed").value,
     children: familyChildren.map((child, index) => ({
-      index, name: child.name, parts: child.parts,
+      index, name: child.name, parts: child.parts, personality: child.personality,
     })),
   };
   copy(JSON.stringify(data, null, 2), "Family JSON copied");

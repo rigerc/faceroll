@@ -188,3 +188,12 @@ all nine animations, and no two siblings share the same rendered idle face.
 The batch tool caps responses at 20 children to keep MCP payloads manageable;
 `derive_child` can address any available slot. Bear parents support 15
 visually unique children; other bodies support 239 with the current catalog.
+
+## Personality traits
+
+`roll_character`, `reroll_part`, `derive_child`, and `derive_children` return a
+`personality` tuple of three trait objects with `id`, `label`, and `description`.
+`list_presets` also includes personalities. Traits are derived from exact face
+parts, independent of custom names and expressions. Save parts to reproduce
+them; existing snapshots without traits still work. `export_character` includes
+personality in all four formats, with communication guidance in system prompts.

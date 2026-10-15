@@ -1,5 +1,6 @@
 import type { Character } from "./character";
 import { createCharacter } from "./character";
+import type { Personality } from "./personality";
 import type { NameMode } from "./names";
 import type { Parts } from "./parts";
 import { STATES, type StateName } from "./states";
@@ -23,6 +24,8 @@ export function toSystemPrompt(character: Character, options: PromptOptions = {}
   return (
     `You are ${character.name}. Show your state with one of these ASCII faces. ` +
     `Use at most one per message, at the start or the end, and only when the situation matches.\n\n` +
+    `Personality\n${character.personality.map((trait) => `- ${trait.label}: ${trait.description}`).join("\n")}\n` +
+    `Use these traits to guide communication while respecting the task and user instructions.\n\n` +
     sections.join("\n\n") +
     `\n\nNever put a face inside code, file contents, or commit messages.`
   );
@@ -33,12 +36,13 @@ export function toMarkdown(character: Character): string {
   const rows = STATES.map(
     (s) => `| ${s.label} | \`${character.animations[s.id].still}\` | ${s.use} |`,
   );
-  return `### ${character.name}\n\n| State | Face | Use when |\n|---|---|---|\n${rows.join("\n")}`;
+  return `### ${character.name}\n\nPersonality: ${character.personality.map((trait) => trait.label).join(", ")}.\n\n${character.personality.map((trait) => `- **${trait.label}:** ${trait.description}`).join("\n")}\n\n| State | Face | Use when |\n|---|---|---|\n${rows.join("\n")}`;
 }
 
 /** Plain data that survives `JSON.stringify`. Frames are `[text, ms]` pairs. */
 export interface SerializedCharacter {
   name: string;
+  personality: Personality;
   nameMode?: NameMode;
   seed?: string;
   parts: Parts;
@@ -53,6 +57,7 @@ export function serialize(character: Character): SerializedCharacter {
   }
   return {
     name: character.name,
+    personality: character.personality,
     ...(character.nameMode !== undefined ? { nameMode: character.nameMode } : {}),
     ...(character.seed !== undefined ? { seed: character.seed } : {}),
     parts: { ...character.parts },
@@ -82,6 +87,7 @@ export function toNodeSource(character: Character): string {
   // Use JSON strings for all user-controlled data to avoid code injection.
   return [
     `// Faceroll animations for ${character.name.replace(/[\r\n\u2028\u2029]/g, " ")}`,
+    `const personality = ${JSON.stringify(character.personality, null, 2)};`,
     `const animations = ${JSON.stringify(animations, null, 2)};`,
     "",
     "// Animate one state on one terminal line; returns a stop function.",

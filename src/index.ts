@@ -46,3 +46,6 @@ export { cellWidth } from "./width";
 
 export { nameForParts } from "./names";
 export type { NameMode } from "./names";
+
+export { PERSONALITY_TRAITS, personalityForParts } from "./personality";
+export type { Personality, PersonalityTrait, PersonalityTraitId } from "./personality";

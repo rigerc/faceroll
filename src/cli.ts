@@ -90,7 +90,7 @@ function describe(c: Character): string {
   const p = c.parts;
   const width = Math.max(...STATES.map((s) => s.label.length));
   const rows = STATES.map((s) => `${s.label.padEnd(width)}  ${c.animations[s.id].still}`);
-  return [`${c.name}  (seed ${c.seed}, ${p.body} / ${p.eyes} / ${p.mouth})`, "", ...rows].join("\n");
+  return [`${c.name}  (seed ${c.seed}, ${p.body} / ${p.eyes} / ${p.mouth})`, `Personality: ${c.personality.map((trait) => trait.label).join(", ")}`, "", ...rows].join("\n");
 }
 
 async function main(): Promise<void> {
@@ -130,7 +130,7 @@ async function main(): Promise<void> {
         const start = flags["index"] !== undefined ? Number(flags["index"]) : 0;
         const out = format === "json"
           ? JSON.stringify({ parent: serialize(parent), children: children.map((character, i) => ({ index: start + i, character: serialize(character) })) }, null, 2)
-          : [`Parent  ${parent.animations.idle.still}  ${parent.name}`, ...children.map((c, i) => `Thread ${start + i}  ${c.animations.idle.still}  ${c.name}`)].join("\n");
+          : [`Parent  ${parent.animations.idle.still}  ${parent.name}  [${parent.personality.map((trait) => trait.label).join(", ")}]`, ...children.map((c, i) => `Thread ${start + i}  ${c.animations.idle.still}  ${c.name}  [${c.personality.map((trait) => trait.label).join(", ")}]`)].join("\n");
         process.stdout.write(out + "\n");
       } catch (e) {
         if (e instanceof RangeError) throw new UsageError(e.message);

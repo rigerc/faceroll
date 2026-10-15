@@ -194,3 +194,15 @@ test("Studio ships both themes, brand vectors and compact mobile workspaces", as
     assert.match(await readFile(new URL("assets/" + name, root), "utf8"), /<svg/);
   }
 });
+
+test("personalities restore from legacy storage and follow UI undo", () => {
+  const config = createFaceroll().getConfig();
+  const editor = restoreEditor({ getItem: () => JSON.stringify(config) });
+  const initial = editor.getCharacter().personality;
+  assert.equal(initial.length, 3);
+  const history = createHistory(editor);
+  history.change(() => editor.applyPreset("bunny"));
+  assert.notDeepEqual(editor.getCharacter().personality, initial);
+  history.undo();
+  assert.deepEqual(editor.getCharacter().personality, initial);
+});

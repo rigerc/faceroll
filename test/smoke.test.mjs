@@ -22,7 +22,7 @@ test("ESM and CommonJS entry points expose the same core API", () => {
   }
 });
 
-test("all 58320 state animations have stable durations", () => {
+test("all 64800 state animations have stable durations", () => {
   let checked = 0;
   for (const body of esm.BODIES) for (const eyes of esm.EYES) for (const mouth of esm.MOUTHS) {
     const c = esm.createCharacter({ body: body.id, eyes: eyes.id, mouth: mouth.id });
@@ -38,7 +38,7 @@ test("all 58320 state animations have stable durations", () => {
     }
   }
   assert.equal(checked, esm.BODIES.length * esm.EYES.length * esm.MOUTHS.length * esm.STATES.length);
-  assert.equal(checked, 58320);
+  assert.equal(checked, 64800);
 });
 
 test("locked editor, seeded rerolls, bounded undo, and mouth preference", () => {
@@ -87,6 +87,9 @@ test("CLI supports new node output and old command interface", () => {
     const out = spawnSync(process.execPath, [cli, "roll", "--seed", "pixel", "--format", format], { encoding: "utf8" });
     assert.equal(out.status, 0, out.stderr);
     assert.ok(out.stdout);
+    const character = esm.rollCharacter({ seed: "pixel" });
+    for (const trait of character.personality) assert.ok(out.stdout.includes(trait.label));
+    if (format === "json") assert.deepEqual(JSON.parse(out.stdout).personality, character.personality);
     if (format === "node") assert.ok(out.stdout.includes("function play(state"));
   }
 });

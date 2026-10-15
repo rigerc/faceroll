@@ -54,3 +54,14 @@ editor.export("json");  // "prompt" | "markdown" | "json" | "node"
 - `commit` pushes the *previous* parts onto a bounded stack (drops the oldest past the limit). `undo` restores parts and their automatic name without changing locks, vibe, or a custom name.
 - The bundled `examples/browser.html` wires all of this to a UI: state/vibe selectors, roll, undo, per-part reroll, locks, animated preview, export chooser, `localStorage` persistence, reduced-motion support.
 
+
+## Personality in the playground
+
+`editor.getCharacter().personality` exposes three immutable traits derived from
+current parts. Rolls, presets, explicit edits, and undo recalculate them;
+renaming and expression changes preserve them. `getConfig()` stores the parts
+needed to restore traits, so existing saved configs need no migration.
+
+The playground displays trait badges below the character name. Expand **About
+these traits** for descriptions using the mouse or keyboard. Preset and thread
+family previews show trait summaries, and family JSON includes each personality.

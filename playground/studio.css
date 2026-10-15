@@ -281,3 +281,26 @@ footer{max-width:none;background:var(--surface);padding:22px 30px}
   .preview-panel .face-wrap{overflow-x:auto;overflow-y:hidden}
   .preview-panel .face{font-size:clamp(22px,6.5vw,36px)}
 }
+
+/* Personality belongs to the character identity above its expressions. */
+.personality{order:0;max-width:100%;margin:10px auto 0;color:var(--studio-text);font-size:12px;text-align:center}
+.trait-badges{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.trait-badge{display:inline-block;padding:4px 9px;border:1px solid var(--studio-monitor-line);border-radius:20px;color:#d2f5e7;background:#172b30;line-height:1.5}
+.personality details{margin-top:8px;color:#aebfc0}
+.personality summary{cursor:pointer;width:fit-content;margin:auto;min-height:24px;padding:3px 0;text-underline-offset:3px}
+.personality summary:hover{color:var(--studio-text)}
+.personality summary:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+.personality dl{max-width:42ch;margin:12px auto;text-align:left}
+.personality dt{font-weight:700;color:var(--studio-text);margin-top:8px}
+.personality dd{margin:2px 0 0;line-height:1.5}
+.personality details p{max-width:42ch;margin:10px auto;line-height:1.5}
+.trait-summary{display:block;color:var(--muted);font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.preset .trait-summary{margin-top:5px}
+.family-card .trait-summary{margin-top:4px}
+
+@media(max-width:760px){
+  .stage{overflow-y:auto;grid-template-rows:auto auto minmax(54px,1fr)}
+  .stage .personality{grid-column:1/-1;grid-row:2;margin:0 auto}
+  .stage .face-wrap{grid-row:3}
+  .personality summary{min-height:44px;padding:12px 0}
+}

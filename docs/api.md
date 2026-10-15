@@ -19,6 +19,7 @@ import { rollCharacter, createCharacter, rerollPart, listParts } from "faceroll"
 ```ts
 interface Character {
   readonly name: string;
+  readonly personality: Personality; // readonly tuple of three traits
   readonly nameMode?: "auto" | "custom";
   readonly seed?: string;
   readonly parts: Readonly<Parts>;          // { body, eyes, mouth }
@@ -31,6 +32,38 @@ interface RollOptions {
 interface CreateOptions { name?: string; nameMode?: "auto" | "custom"; seed?: string; }
 interface RerollOptions { seed?: string | number; rng?: Rng; vibe?: Vibe; }
 ```
+
+## Personality (`src/personality.ts`)
+
+```ts
+import { PERSONALITY_TRAITS, personalityForParts } from "faceroll";
+import type { Personality, PersonalityTrait, PersonalityTraitId } from "faceroll";
+
+const traits = personalityForParts({ body: "round", eyes: "dot", mouth: "w" });
+// Resourceful, Steady, Candid
+```
+
+Every generated character has `personality: readonly [PersonalityTrait,
+PersonalityTrait, PersonalityTrait]`. Each trait has a stable `id`, a readable
+`label`, and a short `description` for communication guidance.
+`PERSONALITY_TRAITS` exposes the frozen catalog of 18 traits.
+
+Assignment picks one trait each for approach, temperament, and communication
+style. All three are distinct and compatible. The versioned v1 calculation uses
+only the exact body/eyes/mouth IDs (including the bear's stored mouth preference),
+never the name, seed, vibe, or current expression. It does not consume the face
+roll's RNG. Different faces may share a profile; changing parts recalculates
+traits but can produce the same profile. Catalog ordering and v1 assignment are
+persistent identity rules.
+
+Rolls, presets, rerolls, editor changes, undo, and derived children all use this
+assignment. Children receive their own parts' traits rather than inheriting the
+parent's. JSON includes the full trait objects; Markdown, system prompts, and
+standalone Node.js exports include descriptions. Prompts use traits as
+communication guidance while respecting the task and user instructions.
+`deserialize` regenerates traits from parts, including legacy snapshots without
+personality; supplied personality data does not override automatic assignment.
+Custom traits and independent personality rerolls are not supported.
 
 ## Project/thread families (`src/children.ts`)
 
