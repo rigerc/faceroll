@@ -1,233 +1,200 @@
-# faceroll
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="playground/assets/logo-reversed.svg">
+    <img src="playground/assets/logo-color.svg" alt="Faceroll logo" width="480">
+  </picture>
+</p>
 
-Random, animated ASCII faces (asciimoji) for AI agents. Roll a character once and get a face for every state your agent can be in: idle, working, waiting, questioning, plus happy, sad, surprised, angry and sleepy.
+# Faceroll
 
+**Animated text faces for AI agents.** Give an agent a recognizable character, show what it's doing, and reuse the same face in messages, terminals, and interfaces.
+
+```text
+ʕ•ᴥ•ʔ        idle
+ʕ•ᴥ•ʔ ...    working
+ʕ•ᴥ•ʔ ?      questioning
+ʕ^▽^ʔ ♪     happy
 ```
-ʕ•ᴥ•ʔ            idle (blinks, glances left and right)
-ʕ•ᴥ•ʔ ...        working (eyes scan while dots run)
-ʕ•ᴥ•ʔ ?         questioning
-ʕ^▽^ʔ ♪         happy (dances)
-```
 
-- Zero runtime dependencies, works in browsers and Node 18+
-- Editable characters: part locks, per-part reroll, undo, and reusable snapshots
-- Standalone Node source export and browser integration demo
-- ESM and CJS builds with full types
-- Seeded: the same seed always gives the same character
-- Compact: every frame is one short line (checked in tests)
-- Every animation is plain data (`{ text, ms }` frames), so you can play it anywhere
+Each character has nine expressions: `idle`, `working`, `waiting`, `questioning`, `happy`, `sad`, `surprised`, `angry`, and `sleepy`. The examples above are illustrative; generated faces depend on the chosen parts.
+
+- **Make it yours:** 27 bodies, 16 eye styles, 15 mouths, and 24 ready-made presets.
+- **Keep it recognizable:** use a seed or save the parts to recreate a character. Names are assigned automatically from the face's parts, or you can set your own.
+- **Animate or stay still:** animations are timed text frames, with a still frame for Markdown, logs, or reduced-motion displays.
+- **Use it where you work:** TypeScript/JavaScript, CLI, terminals, optional React/Vue/Web Component adapters, and an MCP server.
+- **Keep the core small:** no runtime dependencies, ESM and CommonJS builds, and TypeScript declarations.
 
 ## Install
+
+Requires **Node.js 18+** for the library and CLI.
 
 ```sh
 npm install faceroll
 ```
 
-## Quick start
+## Create your first character
 
 ```ts
 import { rollCharacter, toSystemPrompt } from "faceroll";
 
-const pixel = rollCharacter({ name: "Pixel", seed: "pixel", vibe: "cute" });
+const agent = rollCharacter({ seed: "my-agent", vibe: "cute" });
 
-pixel.animations.idle.still;      // "ヽ(·_·)ﾉ"
-pixel.animations.working.frames;  // [{ text: "ヽ(·_·)ﾉ .  ", ms: 150 }, ...]
+console.log(agent.name);                    // Automatic name for this face
+console.log(agent.animations.idle.still);   // One-line idle expression
+console.log(agent.animations.working.frames); // [{ text, ms }, ...]
 
-// Tell the agent which face to use when
-const systemPrompt = toSystemPrompt(pixel);
+const systemPrompt = toSystemPrompt(agent); // Faces and when the agent should use them
 ```
 
-Save the seed (or the parts) and you can rebuild the same character later:
+The same seed and options produce the same character. To restore a face from saved parts instead, use `createCharacter`:
 
 ```ts
 import { createCharacter } from "faceroll";
 
-const same = createCharacter(pixel.parts, { name: "Pixel" });
+const restored = createCharacter(agent.parts);
 ```
 
-## Parent / child faces for project threads
+Every character contains immutable `parts` and `animations`. An animation includes `still`, `frames`, `duration`, and `width`, so you can render it with Faceroll's player or your own.
 
-One project face can have a family of related thread faces. Each child keeps
-the project's body while changing its eyes and/or mouth. Variations prefer a
-single part change first, and each child retains all nine animations.
+## Pick a preset or customize a face
+
+Faceroll has **6,480 part combinations** and **24 named presets** grouped into `cute`, `cool`, and `weird` styles.
 
 ```ts
-import { rollCharacter, deriveChildCharacter, deriveChildCharacters } from "faceroll";
+import { createPresetCharacter, createFaceroll } from "faceroll";
+
+const kitty = createPresetCharacter("kitty", { name: "Pixel" });
+
+const editor = createFaceroll({ seed: "my-agent", vibe: "cute" });
+editor.applyPreset("bunny");
+editor.setLocked("eyes", true); // Keep the eyes when rolling
+editor.roll();                  // Reroll unlocked parts
+editor.reroll("body");          // Change just the body
+editor.undo();                  // Undo the last change
+
+const chosen = editor.getCharacter();
+const savedConfig = editor.getConfig();
+```
+
+The editor also supports part-by-part selection, persistent locks, custom names, and JSON, Markdown, system-prompt, and standalone Node.js exports. Use `editor.setName("")` to return to an automatic name. See the [editor guide](docs/editor.md) and [parts catalog](docs/parts.md).
+
+### Give project threads related faces
+
+Use one character as a project's parent, then derive stable variations for individual threads. Children keep the parent's body while varying the eyes and/or mouth.
+
+```ts
+import {
+  rollCharacter,
+  deriveChildCharacter,
+  deriveChildCharacters,
+  childCapacity,
+} from "faceroll";
 
 const project = rollCharacter({ seed: "my-project" });
-const previews = deriveChildCharacters(project, { count: 5, seed: "my-project" });
+const threads = deriveChildCharacters(project, { count: 5, seed: "family" });
+const thirdThread = deriveChildCharacter(project, { index: 2, seed: "family" });
 
-// Assign a zero-based slot once and persist it with your thread metadata.
-const thread = deriveChildCharacter(project, { index: 2, seed: "my-project" });
-thread.animations.working.still;
+console.log(childCapacity(project));
 ```
 
-The same parent **parts**, family seed and slot always produce the same child.
-Adding threads does not change the faces at existing slots. Persist the parent's
-parts, family seed and each thread's allocated slot; Faceroll intentionally does
-not manage project or thread storage. Child names default to unique automatic
-names, or pass `name` to `deriveChildCharacter` for a custom name. An omitted
-family seed also produces a deterministic order for the same parent parts.
+Save the parent's `parts`, the family seed, and each thread's **zero-based index**. Reusing those values gives each thread the same face; adding another thread does not change earlier ones. Children are visually distinct within a family. Capacity depends on the parent's body (239 for most bodies, 15 for bear), and exceeding it throws a `RangeError`. Faceroll generates the faces but does not store project or thread metadata.
 
-Siblings are distinct by their **rendered idle face**, even for bear bodies
-whose mouths look identical. With the current parts catalog there are 239
-possible children for other bodies, or 15 for a bear body. Requests exceeding
-capacity throw `RangeError`; `childCapacity(parent)` returns the limit.
-Children do not claim a standalone roll seed; regenerate them through the
-family API.
+From the CLI:
 
 ```sh
-faceroll children --preset kitty --seed my-project --count 5
-faceroll children --preset kitty --seed my-project --index 2 --format json
+npx faceroll children --preset kitty --seed my-project --count 5
+npx faceroll children --preset kitty --seed my-project --index 2 --format json
 ```
-
-The MCP server also exposes `derive_child` and `derive_children`, and the
-playground has an interactive **Thread family** gallery.
-
-## More faces and ready-made presets
-
-Faceroll v0.3.0 includes **27 bodies, 16 eye styles, and 15 mouths**: 6,480 possible
-part combinations, with all nine animated states per character. The 24 named
-presets provide recognizable starting faces grouped by `cute`, `cool`, and `weird`.
-
-```ts
-import { FACE_PRESETS, getFacePreset, createPresetCharacter, createFaceroll } from "faceroll";
-
-const names = FACE_PRESETS.map((preset) => preset.id);
-const kitty = createPresetCharacter("kitty", { name: "Pixel" });
-kitty.animations.idle.still; // "ฅ(≖ᆺ≖)ฅ"
-
-const editor = createFaceroll({ name: "Pixel" });
-editor.applyPreset("bunny");   // select a preset; undo history is retained
-editor.undo();                 // restore your previous face
-const style = getFacePreset("bunny").vibe; // "cute"
-```
-
-```sh
-faceroll presets
-faceroll roll --preset kitty
-faceroll roll --preset bunny --body round --format json
-```
-
-Explicit `--body`, `--eyes`, and `--mouth` flags override a preset's parts.
-When a preset is selected, seed and vibe do not change its predefined parts.
-Visit `examples/browser.html` (after building and serving the project) to
-browse the new **Face gallery**, including a style filter and preview.
 
 ## Play an animation
 
-`createPlayer` is a small timer loop. It calls `onFrame` right away with frame 0, then follows each frame's `ms`.
+`createPlayer` calls your callback immediately with the first frame, then advances according to each frame's `ms`.
 
 ```ts
 import { createPlayer } from "faceroll";
+
+const statusEl = document.querySelector("#agent-status")!;
 
 const player = createPlayer((frame) => {
   statusEl.textContent = frame.text;
 });
 
-player.play(pixel.animations.working);
-// later, when the agent state changes
-player.play(pixel.animations.idle);
-// when you are done
+player.play(agent.animations.working);
+// Switch states when the agent's status changes:
+player.play(agent.animations.idle);
 player.stop();
 ```
 
-Respect reduced motion by showing the still instead of playing:
+For a custom render loop, use `frameAt(animation, elapsedMs)`. To avoid layout movement, reserve `animation.width` terminal columns (or measure the rendered text in a browser).
+
+When implementing your own player, respect reduced-motion preferences by displaying the still face:
 
 ```ts
-const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-if (reduce) statusEl.textContent = pixel.animations.working.still;
-else player.play(pixel.animations.working);
+const prefersReducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+if (prefersReducedMotion) {
+  statusEl.textContent = agent.animations.working.still;
+} else {
+  player.play(agent.animations.working);
+}
 ```
 
-To drive your own render loop (for example `requestAnimationFrame`), use `frameAt(animation, elapsedMs)`.
+The optional framework components handle reduced motion automatically.
 
-### Keep the layout still
-
-Frames have slightly different widths (a `...` tail grows, a glance adds a space). Each animation has a `width` in terminal columns, and in a browser you can render the face in a box that is as wide as the widest frame:
-
-```ts
-el.style.width = `${animation.width}ch`;
-el.style.whiteSpace = "pre";
-el.style.textAlign = "left";
-```
-
-`cellWidth(text)` estimates terminal columns, counting East Asian wide characters as 2. Fonts decide the real width, so measure in the DOM if you need pixel accuracy.
-
-## Terminal
+### Terminal playback
 
 ```ts
 import { playInTerminal } from "faceroll/terminal";
 
-const stop = playInTerminal(pixel.animations.working, { suffix: "  thinking" });
+const stop = playInTerminal(agent.animations.working, { suffix: "  thinking" });
 await doTheWork();
 stop({ clear: true });
 ```
 
-It redraws one line with `\r` and hides the cursor while it runs. On a non-TTY stream (CI logs, pipes) it prints the still face once instead of redrawing. Use `createTerminalPlayer()` to switch animations on the same line.
+Terminal playback redraws a single line. In non-TTY output, such as CI logs or a pipe, it prints the still face instead. Use `createTerminalPlayer()` if you need to switch states without starting a new player.
 
 ## CLI
 
+The CLI comes with the npm package. Use `npx` if you haven't installed it globally:
+
 ```sh
 npx faceroll roll --vibe cute --name Pixel
-npx faceroll roll --seed pixel --format prompt     # also: markdown, json, node, text
+npx faceroll roll --preset kitty --format json
+npx faceroll roll --seed pixel --format prompt
 npx faceroll play working --seed pixel --duration 3000
-npx faceroll children --preset kitty --count 5 --seed project
+npx faceroll presets
 npx faceroll states
 npx faceroll parts
 ```
 
-Lock parts with `--body`, `--eyes` and `--mouth`.
+`roll` supports `text`, `prompt`, `markdown`, `json`, and `node` formats. The `node` format creates a standalone, dependency-free Node.js animation player. Use `--body`, `--eyes`, and `--mouth` to choose exact parts; these flags override preset parts.
 
-## MCP server
-
-The optional [MCP server](mcp/README.md) lets agents browse presets, create and
-reroll characters, retrieve animation frames, and export system prompts,
-Markdown, JSON or Node.js source. It uses
-[nickytonline's TypeScript MCP template](https://github.com/nickytonline/mcp-typescript-template)
-and runs as a separate Node.js 24+ package; the core stays dependency-free.
-
-From a checkout, install and build it with:
-
-```sh
-npm ci
-npm --prefix mcp ci
-npm run build:mcp
-npm run start:mcp           # HTTP: http://127.0.0.1:3000/mcp
-```
-
-For clients that launch a local stdio server, use
-`node /absolute/path/to/faceroll/mcp/dist/index.js --stdio`.
-See the [server guide](mcp/README.md) for client configuration and tool inputs.
-
-Use `npm run inspect:mcp` to build and open MCP Inspector for the stdio server,
-or `npm run inspect:mcp:http` to inspect an already running HTTP server.
-For command-line checks, use `npm run inspect:mcp:cli` or
-`npm run inspect:mcp:http:cli`. See the [Inspector guide](mcp/README.md#test-with-mcp-inspector)
-for tool calls and custom ports.
+See [CLI options and examples](docs/cli.md).
 
 ## Framework components
 
-Optional ESM adapters are available for React 18+, Vue 3.3+, and native Web
-Components. Import only the framework you use: the core and CLI remain free
-of runtime dependencies.
+Optional **ESM-only** adapters expose a face that takes `character`, `state`, and `paused` props. React 18+ and Vue 3.3+ are optional peers; the core remains dependency-free.
 
-### React
+**React**
 
 ```tsx
 import { createPresetCharacter } from "faceroll";
 import { AgentFace } from "faceroll/react";
 
 const pixel = createPresetCharacter("kitty", { name: "Pixel" });
-<AgentFace character={pixel} state="working" />;
+
+export function Status() {
+  return <AgentFace character={pixel} state="working" />;
+}
 ```
 
-### Vue 3
+**Vue**
 
 ```vue
 <script setup lang="ts">
 import { createPresetCharacter } from "faceroll";
 import { AgentFace } from "faceroll/vue";
+
 const pixel = createPresetCharacter("kitty", { name: "Pixel" });
 </script>
 
@@ -236,10 +203,11 @@ const pixel = createPresetCharacter("kitty", { name: "Pixel" });
 </template>
 ```
 
-### Native Web Component
+**Native Web Component**
 
 ```ts
 import { defineFacerollElement } from "faceroll/web-component";
+
 defineFacerollElement();
 ```
 
@@ -247,214 +215,73 @@ defineFacerollElement();
 <faceroll-face preset="kitty" name="Pixel" state="working"></faceroll-face>
 ```
 
-Pass a generated character via the element's `.character` property to override
-the preset. React and Vue take `character`, `state`, and `paused` props.
-All adapters show still frames during SSR, respect reduced motion and clean up
-timers. The native element registers only when requested.
+Framework adapters display still faces during server rendering, respect reduced motion, and clean up animation timers. The Web Component is registered only when you call `defineFacerollElement()`. See [framework integration](docs/frameworks.md).
 
-See [framework integration documentation](docs/frameworks.md).
+## Try the playground
 
-## API
-
-### Characters
-
-| Function | What it does |
-|---|---|
-| `rollCharacter(options?)` | Roll a character. Options: `seed`, `rng`, `vibe`, `lock`, `name`. |
-| `createCharacter(parts, options?)` | Build from exact parts. Throws `RangeError` on an unknown id. |
-| `rerollPart(character, kind, options?)` | New body, eyes or mouth, keeping the rest. |
-| `deriveChildCharacter(parent, { index, seed?, name? })` | Generate a stable variation for one thread slot. |
-| `deriveChildCharacters(parent, { count, seed? })` | Generate distinct siblings for slots 0 through count − 1. |
-| `childCapacity(parent)` | Maximum visually distinct children within the parent body. |
-| `listParts()` | Every valid id for `body`, `eyes` and `mouth`. |
-| `partPool(kind, vibe?)` | Ids that fit a vibe. |
-
-A `Character` is deeply frozen animation data: `{ name, nameMode?, seed?, parts, animations }`. Rolling without a seed generates one and stores it on the character so you can reproduce it. If you pass your own `rng`, no seed is recorded.
-
-`vibe` is `"any"`, `"cute"`, `"cool"` or `"weird"`. A bear body always **renders** with the `ᴥ` mouth, but `character.parts.mouth` retains your selected mouth (for example, `"w"`). When the body changes, the saved preference is restored. Serialized characters also preserve this choice.
-
-### Automatic names
-
-Omit `name` and Faceroll assigns a short, friendly first name, such as **Milo**.
-Names are selected deterministically from a curated pool of 324 names. The same
-face configuration always receives the same name, but different configurations may
-share one: character identity comes from its parts, not its display name. The same
-parts always get the same name across seeds, presets, sessions, and integrations;
-the selected mouth counts even when a bear renders its fixed mouth. Names do not
-consume random draws or change seeded face results.
-
-```ts
-import { rollCharacter, nameForParts, createFaceroll } from "faceroll";
-const face = rollCharacter({ seed: "my-agent" });
-face.name;                 // automatic single-word name, e.g. "Milo"
-nameForParts(face.parts);  // the same name without building animations
-const editor = createFaceroll();
-editor.roll();             // automatic name follows the new parts
-editor.setName("Pixel");   // custom name stays through rolls and edits
-editor.setName("");        // return to automatic naming
-```
-
-`nameMode` is `"auto"` or `"custom"`. JSON exports and editor configs preserve it;
-pass it back with the saved name and parts when restoring. Snapshots without
-`nameMode` retain their existing nonblank names as custom names. Custom names may
-repeat and may contain spaces. Automatic names also repeat across different
-configurations, so a character is identified by its parts rather than its name.
-The playground shows human names on preset cards and supports searching by name
-or preset label. The name field shows Automatic or Custom; choose **Use automatic
-name** (or clear the field) to return to automatic naming.
-
-### States
-
-`idle`, `working`, `waiting`, `questioning`, `happy`, `sad`, `surprised`, `angry`, `sleepy`. `STATES` lists each with a label, kind (`state` or `emotion`), a `use` sentence and a sample `say` message.
-
-An `Animation` has `name`, `still`, `frames`, `duration` (one loop in ms) and `width`.
-
-### Playing
-
-| Function | What it does |
-|---|---|
-| `createPlayer(onFrame, options?)` | Timer-driven loop with `play`, `stop`, `playing` and `current`. Pass `setTimeout` and `clearTimeout` in `options` for tests. |
-| `frameAt(animation, ms)` | The frame showing `ms` into the loop. |
-| `frameIndexAt(animation, ms)` | Same, as an index. |
-
-### Exporting
-
-| Function | What it does |
-|---|---|
-| `toSystemPrompt(character, { states? })` | Prompt text listing each face and when to use it. |
-| `toMarkdown(character)` | A table of states, faces and use cases. |
-| `serialize(character)` | Plain JSON data. Frames are `[text, ms]` pairs. |
-| `deserialize(data)` | Rebuilds a character from `name` and `parts`. |
-| `toNodeSource(character)` | Standalone, dependency-free Node.js animation code. |
-
-## Interactive editor (persistent locks and undo)
-
-Use `createFaceroll()` when building a character designer. This keeps editor
-state separate from the existing immutable `Character` API:
-
-```ts
-import { createFaceroll, toSystemPrompt } from "faceroll";
-
-const editor = createFaceroll({ name: "Pixel", vibe: "cute", seed: "my-agent" });
-editor.setLocked("eyes", true);  // lock eyes through all rolls
-editor.roll();                   // reroll the body and mouth
-editor.reroll("body");          // reroll a single unlocked part
-editor.undo();                   // undo the most recent roll
-
-editor.getParts();               // editable selected part ids
-editor.getLocks();               // boolean per-part locks
-editor.getStill("idle");        // static face
-editor.getFrameAt("working", 250); // a face frame at elapsed milliseconds
-editor.getCharacter();           // immutable Character snapshot
-editor.export("json");         // "prompt", "markdown", "json", "node"
-```
-
-By default, the editor retains the last 30 successful roll/reroll snapshots.
-Override with `historyLimit` (0 disables undo). Locks and vibe remain in effect
-after undo. Pass `{ seed: "..." }` for a deterministic sequence of rolls, or
-pass a custom `rng` function. `getConfig()` returns a plain object containing
-`name`, `nameMode`, `vibe`, `parts`, and `locks`, suitable for saving to localStorage in an app. You can also pass the earlier editor's `random` option; `rng` is the preferred name.
-
-`setParts({ body: "bear", mouth: "w" })` keeps `"w"` as the selected mouth,
-even though the bear renders with its special `ᴥ` glyph; changing the body
-back to `"round"` restores the `(•ω•)` face.
-
-### Node.js source export
-
-```ts
-import { rollCharacter, toNodeSource } from "faceroll";
-import { writeFileSync } from "node:fs";
-writeFileSync("animations.cjs", toNodeSource(rollCharacter({ seed: "pixel" })));
-```
-
-The emitted file defines a `play(state)` function that returns a stop function.
-It includes all nine animations as `[face, ms]` tuples and requires no package.
-Use `faceroll roll --format node` to generate the same output from the CLI.
-
-### Playground
+The local playground lets you browse presets, roll and edit parts, lock selections, undo changes, and preview all nine expressions. You can inspect individual animation frames, explore thread families, and copy or download system prompts, JSON, Markdown, or Node.js source. Character settings are saved in local storage when available.
 
 ```sh
+git clone https://github.com/rigerc/faceroll.git
+cd faceroll
 npm ci
 npm run playground
 ```
 
-Open **http://127.0.0.1:4173** to explore the interactive playground. Pick from
-24 presets, search and filter styles, customize body/eyes/mouth, lock parts for
-random rolls, and undo selections. Preview all nine moods, change playback speed,
-pause or inspect individual frames, and copy a face or export the character as
-a system prompt, JSON, Markdown, or standalone Node.js source.
+Open **http://127.0.0.1:4173**. For a static build, use `npm run build:playground`; the output is written to `playground-dist/`. Cloudflare Workers deployment commands are `npm run deploy:cloudflare:dry` and `npm run deploy:cloudflare`.
 
-Your character configuration stays in localStorage when available. Reduced-motion
-preferences pause animations; playback can be enabled explicitly. The playground
-uses the real library build and has no frontend runtime dependencies.
+You can also run `npm run build` and serve the repository root over HTTP to try [the browser integration example](examples/browser.html).
 
-`npm run build:playground` creates a self-contained static site in
-`playground-dist/`, ready to serve at a root URL or under a subdirectory.
-Set `PORT` or `HOST` to override the development server defaults. After building,
-`node scripts/serve-playground.mjs` serves without rebuilding. Source lives in
-`playground/`; run `npm run test:playground` after building to check its model,
-packaging, and preview server.
+## MCP server
 
-The built site also ships `404.html` and `_headers`. Cloudflare Pages and Workers
-static assets both read those natively: the 404 page keeps unmatched URLs on a
-real `404` status instead of falling back to the SPA shell, and `_headers` sets a
-strict `Content-Security-Policy`. Because the 404 page is served at whatever path
-was requested, its asset URLs are root-absolute while the rest of the site stays
-relative and subdirectory-friendly.
+The optional [MCP server](mcp/README.md) gives AI agents tools to browse presets, create and reroll characters, derive thread faces, inspect animation frames, and export prompts or data. It is a **separate Node.js 24+ package**, not a dependency of the core library.
 
-#### Deploying
-
-The site deploys to Cloudflare Workers static assets via Wrangler:
+From the repository root:
 
 ```sh
-npm run deploy:cloudflare       # build, then wrangler deploy
-npm run deploy:cloudflare:dry   # build, then wrangler deploy --dry-run
-npm run preview:cloudflare      # build, then wrangler dev on :8787
+npm ci
+npm --prefix mcp ci
+npm run build:mcp
+npm run start:mcp
 ```
 
-`wrangler.jsonc` configures it as an assets-only Worker: no `main`, no `binding`,
-and `not_found_handling: "404-page"` set explicitly because Workers never infers
-it the way Pages does. Wrangler is a dev dependency, so the CLI version is pinned
-by the lockfile rather than whatever is installed globally.
+The HTTP endpoint is **http://127.0.0.1:3000/mcp**. For clients that launch a local stdio process, run `node /absolute/path/to/faceroll/mcp/dist/index.js --stdio`. The [MCP guide](mcp/README.md) covers client configuration, tools, and Inspector commands.
 
-Custom domains require the zone's nameservers to be managed by Cloudflare; a
-`workers.dev` subdomain works without one.
+## API at a glance
 
-### Browser example
+| API | Purpose |
+| --- | --- |
+| `rollCharacter(options?)` | Roll a seeded or random character, with optional vibe and locked parts. |
+| `createCharacter(parts, options?)` | Rebuild a face from exact parts. |
+| `createPresetCharacter(id, options?)` | Create a face from a named preset. |
+| `rerollPart(character, kind, options?)` | Change one part without mutating the original. |
+| `createFaceroll(options?)` | Edit parts with locks, undo, and exports. |
+| `deriveChildCharacter(parent, options)` | Derive a stable face for a thread slot. |
+| `deriveChildCharacters(parent, options)` | Derive several related thread faces. |
+| `createPlayer(onFrame, options?)` | Play timed text frames in an app. |
+| `frameAt(animation, elapsedMs)` | Get the frame at a point in an animation. |
+| `toSystemPrompt(character)` | Explain the expressions to an AI agent. |
+| `toMarkdown(character)` | Export a table of expressions. |
+| `serialize(character)` / `deserialize(data)` | Save or restore character data. |
+| `toNodeSource(character)` | Export standalone Node.js animation code. |
 
-Run `npm run build`, serve the **project root** over HTTP (not `file://`),
-and open `examples/browser.html`. It imports `../dist/index.js` directly.
-The example has a state selector, vibe selector, roll, undo, per-part reroll and locks,
-animated face preview, and export chooser. It saves the configuration in browser
-localStorage and respects reduced-motion settings.
-
-## Using the faces well
-
-- Show one face per message, at the start or the end.
-- Never put a face inside code, file contents or commit messages. The generated prompt says so.
-- Use the still face in places that cannot animate (logs, markdown, chat).
+See the [full API reference](docs/api.md), [animation guide](docs/animations.md), and [integration guide](docs/integration.md).
 
 ## Development
 
-Full guides in [docs/](docs/): [API](docs/api.md), [parts](docs/parts.md),
-[animations](docs/animations.md), [CLI](docs/cli.md), [editor](docs/editor.md),
-[integration](docs/integration.md), [development](docs/development.md).
-
 ```sh
-npm install
-npm test          # vitest
+npm ci
+npm test                 # Vitest
 npm run typecheck
-npm run build     # tsup: ESM + CJS + .d.ts + CLI
-npm run check:size      # gzip budget per built entrypoint
-npm run test:smoke       # uses prebuilt dist and Node
-npm run build:fallback   # uses tsc when tsup is unavailable
+npm run build            # ESM, CommonJS, declarations, CLI
+npm run check:size       # Check gzip size budgets (after build)
+npm run test:smoke       # Test the built package with Node.js
+npm run build:playground
+npm run test:playground  # Test the built playground
 ```
 
-The tests cover every body, eye, and mouth combination; all nine states and the original timing; frozen frames; reproducible rolls; locks and undo; source exports; and terminal output.
-
-TypeScript 5.x is required for the build (tsup's declaration bundler does not support TypeScript 7 yet).
+Builds require **TypeScript 5.x**. Additional commands and project layout notes are in the [development guide](docs/development.md). Documentation starts at [docs/README.md](docs/README.md).
 
 ## License
 
-MIT (the original package supplied an MIT license; verify redistribution rights for any incorporated original HTML assets before publication).
-
+[MIT](LICENSE). The original package supplied an MIT license; verify redistribution rights for any incorporated original HTML assets before publication.
